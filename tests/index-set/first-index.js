@@ -20,7 +20,7 @@ test("after adding range then removing part of range", function() {
 
 test("after adding range several disjoint ranges", function() {
   var set = new IndexSet();
-  set.addindex(6000)
+  set.addIndex(6000)
      .addIndexesInRange(4, 4);
   equal(set.firstIndex, 4);
 });
