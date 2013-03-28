@@ -79,6 +79,31 @@ define(
       return false;
     }
 
+    function equals(aIndexSet, bIndexSet) {
+      if (aIndexSet === bIndexSet) {
+        return true;
+      }
+      if (bIndexSet == null ||
+          bIndexSet.lastIndex !== aIndexSet.lastIndex ||
+          bIndexSet.length    !== aIndexSet.length) {
+        return false;
+      }
+
+      var aRanges = aIndexSet.__ranges__,
+          bRanges = bIndexSet.__ranges__,
+          cursor  = 0,
+          next    = aRanges[cursor];
+
+      do {
+        if (bRanges[cursor] !== next) {
+          return false;
+        }
+        cursor = Math.abs(next);
+        next   = aRanges[cursor];
+      } while (cursor !== END_OF_SET);
+      return true;
+    }
+
 
 
     __exports__.containsIndex = containsIndex;
@@ -87,4 +112,5 @@ define(
     __exports__.intersectsIndex = intersectsIndex;
     __exports__.intersectsIndexes = intersectsIndexes;
     __exports__.intersectsIndexesInRange = intersectsIndexesInRange;
+    __exports__.equals = equals;
   });

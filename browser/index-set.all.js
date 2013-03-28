@@ -618,6 +618,31 @@ define("index-set/queries",
       return false;
     }
 
+    function equals(aIndexSet, bIndexSet) {
+      if (aIndexSet === bIndexSet) {
+        return true;
+      }
+      if (bIndexSet == null ||
+          bIndexSet.lastIndex !== aIndexSet.lastIndex ||
+          bIndexSet.length    !== aIndexSet.length) {
+        return false;
+      }
+
+      var aRanges = aIndexSet.__ranges__,
+          bRanges = bIndexSet.__ranges__,
+          cursor  = 0,
+          next    = aRanges[cursor];
+
+      do {
+        if (bRanges[cursor] !== next) {
+          return false;
+        }
+        cursor = Math.abs(next);
+        next   = aRanges[cursor];
+      } while (cursor !== END_OF_SET);
+      return true;
+    }
+
 
 
     __exports__.containsIndex = containsIndex;
@@ -626,6 +651,7 @@ define("index-set/queries",
     __exports__.intersectsIndex = intersectsIndex;
     __exports__.intersectsIndexes = intersectsIndexes;
     __exports__.intersectsIndexesInRange = intersectsIndexesInRange;
+    __exports__.equals = equals;
   });
 
 define("index-set/range_start",
@@ -883,6 +909,7 @@ define("index-set",
     var forEachRange = __dependency5__.forEachRange;
     var someRange = __dependency5__.someRange;
     var everyRange = __dependency5__.everyRange;
+    var equals = __dependency6__.equals;
     var containsIndex = __dependency6__.containsIndex;
     var containsIndexes = __dependency6__.containsIndexes;
     var containsIndexesInRange = __dependency6__.containsIndexesInRange;
@@ -891,7 +918,22 @@ define("index-set",
     var intersectsIndexesInRange = __dependency6__.intersectsIndexesInRange;
     var rangeStartForIndex = __dependency7__.rangeStartForIndex;
 
-    var slice = Array.prototype.slice;
+    var slice = Array.prototype.slice,
+        toString = Object.prototype.toString,
+        T_NUMBER = '[object Number]',
+        END_OF_SET = ENV.END_OF_SET;
+
+    function invokeMethodFor(indexSet, method, args) {
+      if (args.length === 1) {
+        if (args[0] instanceof IndexSet) {
+          indexSet[method + "Indexes"](args[0]);
+        } else if (toString.call(args[0]) === T_NUMBER) {
+          indexSet[method + "Index"](args[0]);
+        }
+      } else if (args.length === 2) {
+        indexSet[method + "IndexesInRange"](args[0], args[1]);
+      }
+    }
 
     /**
       An IndexSet represents a collection of unique unsigned integers,
@@ -929,9 +971,8 @@ define("index-set",
       @class IndexSet
      */
     function IndexSet() {
-      // Initialize the index set with a marker at index '0'
-      // indicating that it is the end of the set.
-      this.__ranges__ = [0];
+      this.__ranges__ = [END_OF_SET];
+      invokeMethodFor(this, 'add', slice.call(arguments));
     };
 
     IndexSet.prototype = {
@@ -1041,8 +1082,38 @@ define("index-set",
         return intersectsIndexesInRange(this, rangeStart, rangeEnd);
       },
 
+      // .............................................
+      // Getting indexes
+      //
+
       rangeStartForIndex: function (index) {
         return rangeStartForIndex(this, index);
+      },
+
+      // .............................................
+      // Simplified JS interface
+      //
+
+      add: function () {
+        invokeMethodFor(this, 'add', slice.call(arguments));
+        return this;
+      },
+
+      remove: function () {
+        invokeMethodFor(this, 'remove', slice.call(arguments));
+        return this;
+      },
+
+      intersects: function () {
+        return invokeMethodFor(this, 'intersects', slice.call(arguments));
+      },
+
+      contains: function () {
+        return invokeMethodFor(this, 'contains', slice.call(arguments));
+      },
+
+      equals: function (indexSet) {
+        return equals(this, indexSet);
       },
 
       // .............................................
