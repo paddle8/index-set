@@ -1,6 +1,6 @@
 define(
-  ["index-set/addition","index-set/removal","index-set/env","index-set/coding","index-set/enumeration","index-set/queries","index-set/range_start"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__) {
+  ["index-set/addition","index-set/removal","index-set/env","index-set/coding","index-set/enumeration","index-set/queries","index-set/indexes","index-set/range_start"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__, __dependency8__) {
     "use strict";
     var addIndex = __dependency1__.addIndex;
     var addIndexes = __dependency1__.addIndexes;
@@ -26,7 +26,11 @@ define(
     var intersectsIndex = __dependency6__.intersectsIndex;
     var intersectsIndexes = __dependency6__.intersectsIndexes;
     var intersectsIndexesInRange = __dependency6__.intersectsIndexesInRange;
-    var rangeStartForIndex = __dependency7__.rangeStartForIndex;
+    var indexLessThanIndex = __dependency7__.indexLessThanIndex;
+    var indexLessThanOrEqualToIndex = __dependency7__.indexLessThanOrEqualToIndex;
+    var indexGreaterThanIndex = __dependency7__.indexGreaterThanIndex;
+    var indexGreaterThanOrEqualToIndex = __dependency7__.indexGreaterThanOrEqualToIndex;
+    var rangeStartForIndex = __dependency8__.rangeStartForIndex;
 
     var slice = Array.prototype.slice,
         toString = Object.prototype.toString,
@@ -196,6 +200,22 @@ define(
       // Getting indexes
       //
 
+      indexGreaterThanIndex: function (index) {
+        return indexGreaterThanIndex(this, index);
+      },
+
+      indexGreaterThanOrEqualToIndex: function (index) {
+        return indexGreaterThanOrEqualToIndex(this, index);
+      },
+
+      indexLessThanIndex: function (index) {
+        return indexLessThanIndex(this, index);
+      },
+
+      indexLessThanOrEqualToIndex: function (index) {
+        return indexLessThanOrEqualToIndex(this, index);
+      },
+
       rangeStartForIndex: function (index) {
         return rangeStartForIndex(this, index);
       },
@@ -224,6 +244,14 @@ define(
 
       equals: function (indexSet) {
         return equals(this, indexSet);
+      },
+
+      indexBefore: function (index) {
+        return indexLessThanIndex(this, index);
+      },
+
+      indexAfter: function (index) {
+        return indexGreaterThanIndex(this, index);
       },
 
       // .............................................
