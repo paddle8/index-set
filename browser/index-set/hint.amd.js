@@ -8,7 +8,7 @@ define(
       var ranges = indexSet.__ranges__,
           skip   = ENV.HINT_SIZE,
           next   = Math.abs(ranges[rangeStart]),
-          hintLocation = rangeStart - (rangeStart % skip) + rangeStart,
+          hintLocation = rangeStart - (rangeStart % skip) + skip,
           limit  = rangeStart + rangeLength;
 
       while (hintLocation < limit) {

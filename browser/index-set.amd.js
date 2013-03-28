@@ -1,6 +1,6 @@
 define(
-  ["index-set/addition","index-set/env","index-set/coding","index-set/enumeration"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__) {
+  ["index-set/addition","index-set/env","index-set/coding","index-set/enumeration","index-set/queries","index-set/range_start"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__) {
     "use strict";
     var addIndex = __dependency1__.addIndex;
     var addIndexes = __dependency1__.addIndexes;
@@ -11,7 +11,18 @@ define(
     var forEach = __dependency4__.forEach;
     var map = __dependency4__.map;
     var reduce = __dependency4__.reduce;
+    var some = __dependency4__.some;
+    var every = __dependency4__.every;
     var forEachRange = __dependency4__.forEachRange;
+    var someRange = __dependency4__.someRange;
+    var everyRange = __dependency4__.everyRange;
+    var containsIndex = __dependency5__.containsIndex;
+    var containsIndexes = __dependency5__.containsIndexes;
+    var containsIndexesInRange = __dependency5__.containsIndexesInRange;
+    var intersectsIndex = __dependency5__.intersectsIndex;
+    var intersectsIndexes = __dependency5__.intersectsIndexes;
+    var intersectsIndexesInRange = __dependency5__.intersectsIndexesInRange;
+    var rangeStartForIndex = __dependency6__.rangeStartForIndex;
 
     var slice = Array.prototype.slice;
 
@@ -34,6 +45,19 @@ define(
       ordered collections, such as views or data sets.
 
       [1] http://developer.apple.com/library/ios/#documentation/cocoa/conceptual/Collections/Articles/
+
+      ### Implementation Notes
+
+      The internal data structure is a jump list, where the following rules
+      indicate how to find ranges:
+
+      - a positive integer indicates a filled range
+      - a negative integer indicates a hole
+      - `0` indicates the end of the set
+
+      In addition, there are search accelerator for increasing the performance
+      of insertion and querying. These values are stored in the jump list
+      and indicate the start of the nearest range.
 
       @class IndexSet
      */
@@ -109,11 +133,43 @@ define(
         this.__ranges__ = [0];
         this.length     = 0;
         this.firstIndex = -1;
-        this.lastIndex  = 0;
+        this.lastIndex  = -1;
         return this;
       },
 
       removeIndexesInRange: function (rangeStart, rangeEnd) {
+      },
+
+      // .............................................
+      // Set membership
+      //
+
+      containsIndex: function (index) {
+        return containsIndex(this, index);
+      },
+
+      containsIndexes: function (indexes) {
+        return containsIndexes(this, indexes);
+      },
+
+      containsIndexesInRange: function (rangeStart, rangeEnd) {
+        return containsIndexesInRange(this, rangeStart, rangeEnd);
+      },
+
+      intersectsIndex: function (index) {
+        return intersectsIndex(this, index);
+      },
+
+      intersectsIndexes: function (indexes) {
+        return intersectsIndexes(this, indexes);
+      },
+
+      intersectsIndexesInRange: function (rangeStart, rangeEnd) {
+        return intersectsIndexesInRange(this, rangeStart, rangeEnd);
+      },
+
+      rangeStartForIndex: function (index) {
+        return rangeStartForIndex(this, index);
       },
 
       // .............................................
@@ -143,8 +199,24 @@ define(
         return reduce.apply(null, args);
       },
 
+      some: function (fn, scope) {
+        return some(this, fn, scope);
+      },
+
+      every: function (fn, scope) {
+        return every(this, fn, scope);
+      },
+
       forEachRange: function (fn, scope) {
         forEachRange(this, fn, scope);
+      },
+
+      someRange: function (fn, scope) {
+        someRange(this, fn, scope);
+      },
+
+      everyRange: function (fn, scope) {
+        everyRange(this, fn, scope);
       }
     };
 

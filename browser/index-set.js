@@ -409,6 +409,52 @@ define("index-set/enumeration",
       return value;
     }
 
+    function some(indexSet, fn, scope) {
+      var ranges = indexSet.__ranges__,
+          cursor = 0,
+          next   = ranges[cursor];
+
+      if (typeof scope === "undefined") {
+        scope = null;
+      }
+
+      while (next !== ENV.END_OF_SET) {
+        if (next > 0) {
+          for (var i = cursor; i < next; i++) {
+            if (fn.call(scope, i, indexSet)) {
+              return true;
+            }
+          }
+        }
+        cursor = Math.abs(next);
+        next = ranges[cursor];
+      }
+      return false;
+    }
+
+    function every(indexSet, fn, scope) {
+      var ranges = indexSet.__ranges__,
+          cursor = 0,
+          next   = ranges[cursor];
+
+      if (typeof scope === "undefined") {
+        scope = null;
+      }
+
+      while (next !== ENV.END_OF_SET) {
+        if (next > 0) {
+          for (var i = cursor; i < next; i++) {
+            if (!fn.call(scope, i, indexSet)) {
+              return false;
+            }
+          }
+        }
+        cursor = Math.abs(next);
+        next = ranges[cursor];
+      }
+      return true;
+    }
+
     function forEachRange(indexSet, fn, scope) {
       var ranges = indexSet.__ranges__,
           cursor = 0,
@@ -427,11 +473,57 @@ define("index-set/enumeration",
       }
     }
 
+    function someRange(indexSet, fn, scope) {
+      var ranges = indexSet.__ranges__,
+          cursor = 0,
+          next   = ranges[cursor];
+
+      if (typeof scope === "undefined") {
+        scope = null;
+      }
+
+      while (next !== ENV.END_OF_SET) {
+        if (next > 0) {
+          if (fn.call(scope, cursor, next - cursor, indexSet)) {
+            return true;
+          }
+        }
+        cursor = Math.abs(next);
+        next = ranges[cursor];
+      }
+      return false;
+    }
+
+    function everyRange(indexSet, fn, scope) {
+      var ranges = indexSet.__ranges__,
+          cursor = 0,
+          next   = ranges[cursor];
+
+      if (typeof scope === "undefined") {
+        scope = null;
+      }
+
+      while (next !== ENV.END_OF_SET) {
+        if (next > 0) {
+          if (!fn.call(scope, cursor, next - cursor, indexSet)) {
+            return false;
+          }
+        }
+        cursor = Math.abs(next);
+        next = ranges[cursor];
+      }
+      return true;
+    }
+
 
     __exports__.forEach = forEach;
     __exports__.map = map;
     __exports__.reduce = reduce;
+    __exports__.some = some;
+    __exports__.every = every;
     __exports__.forEachRange = forEachRange;
+    __exports__.someRange = someRange;
+    __exports__.everyRange = everyRange;
   });
 
 define("index-set/env",
@@ -461,7 +553,7 @@ define("index-set/hint",
       var ranges = indexSet.__ranges__,
           skip   = ENV.HINT_SIZE,
           next   = Math.abs(ranges[rangeStart]),
-          hintLocation = rangeStart - (rangeStart % skip) + rangeStart,
+          hintLocation = rangeStart - (rangeStart % skip) + skip,
           limit  = rangeStart + rangeLength;
 
       while (hintLocation < limit) {
@@ -486,6 +578,97 @@ define("index-set/hint",
 
 
     __exports__.addHintFor = addHintFor;
+  });
+
+define("index-set/queries",
+  ["index-set/range_start","index-set/enumeration","index-set/env","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
+    "use strict";
+    var rangeStartForIndex = __dependency1__.rangeStartForIndex;
+    var someRange = __dependency2__.someRange;
+    var everyRange = __dependency2__.everyRange;
+    var ENV = __dependency3__.ENV;
+
+    var END_OF_SET = ENV.END_OF_SET;
+
+    function containsIndex(indexSet, index) {
+      return containsIndexesInRange(indexSet, index, 1);
+    }
+
+    function containsRange(rangeStart, rangeLength) {
+      return containsIndexesInRange(this, rangeStart, rangeLength);
+    }
+
+    function containsIndexes(indexSet, indexes) {
+      // Fast path if the objects are the same
+      if (indexSet === indexes) {
+        return true;
+      }
+
+      return everyRange(indexes, containsRange, indexSet);
+    }
+
+    function containsIndexesInRange(indexSet, rangeStart, rangeLength) {
+      var ranges = indexSet.__ranges__,
+          cursor,
+          next;
+
+      cursor = rangeStartForIndex(indexSet, rangeStart);
+      if (isFinite(cursor)) {
+        next = ranges[cursor];
+
+        return next > 0 &&
+               cursor <= rangeStart &&
+               next >= rangeStart + rangeLength;
+      } else {
+        return true;
+      }
+    }
+
+    function intersectsIndex(indexSet, index) {
+      return intersectsIndexesInRange(indexSet, index, 1);
+    }
+
+    function intersectsRange(rangeStart, rangeLength) {
+      return intersectsIndexesInRange(this, rangeStart, rangeLength);
+    }
+
+    function intersectsIndexes(indexSet, indexes) {
+      // Fast path if the objects are the same
+      if (indexSet === indexes) {
+        return true;
+      }
+
+      return someRange(indexes, intersectsRange, indexSet);
+    }
+
+    function intersectsIndexesInRange(indexSet, rangeStart, rangeLength) {
+      var ranges = indexSet.__ranges__,
+          cursor = rangeStartForIndex(indexSet, rangeStart),
+          next   = ranges[cursor],
+          limit  = rangeStart + rangeLength;
+
+      while (cursor < limit) {
+        if (next === END_OF_SET) {
+          return false;
+        }
+        if (next > 0 && next > rangeStart) {
+          return true;
+        }
+        cursor = Math.abs(next);
+        next   = ranges[cursor];
+      }
+      return false;
+    }
+
+
+
+    __exports__.containsIndex = containsIndex;
+    __exports__.containsIndexes = containsIndexes;
+    __exports__.containsIndexesInRange = containsIndexesInRange;
+    __exports__.intersectsIndex = intersectsIndex;
+    __exports__.intersectsIndexes = intersectsIndexes;
+    __exports__.intersectsIndexesInRange = intersectsIndexesInRange;
   });
 
 define("index-set/range_start",
@@ -578,8 +761,8 @@ define("index-set/removal",
   });
 
 define("index-set",
-  ["index-set/addition","index-set/env","index-set/coding","index-set/enumeration"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__) {
+  ["index-set/addition","index-set/env","index-set/coding","index-set/enumeration","index-set/queries","index-set/range_start"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__) {
     "use strict";
     var addIndex = __dependency1__.addIndex;
     var addIndexes = __dependency1__.addIndexes;
@@ -590,7 +773,18 @@ define("index-set",
     var forEach = __dependency4__.forEach;
     var map = __dependency4__.map;
     var reduce = __dependency4__.reduce;
+    var some = __dependency4__.some;
+    var every = __dependency4__.every;
     var forEachRange = __dependency4__.forEachRange;
+    var someRange = __dependency4__.someRange;
+    var everyRange = __dependency4__.everyRange;
+    var containsIndex = __dependency5__.containsIndex;
+    var containsIndexes = __dependency5__.containsIndexes;
+    var containsIndexesInRange = __dependency5__.containsIndexesInRange;
+    var intersectsIndex = __dependency5__.intersectsIndex;
+    var intersectsIndexes = __dependency5__.intersectsIndexes;
+    var intersectsIndexesInRange = __dependency5__.intersectsIndexesInRange;
+    var rangeStartForIndex = __dependency6__.rangeStartForIndex;
 
     var slice = Array.prototype.slice;
 
@@ -613,6 +807,19 @@ define("index-set",
       ordered collections, such as views or data sets.
 
       [1] http://developer.apple.com/library/ios/#documentation/cocoa/conceptual/Collections/Articles/
+
+      ### Implementation Notes
+
+      The internal data structure is a jump list, where the following rules
+      indicate how to find ranges:
+
+      - a positive integer indicates a filled range
+      - a negative integer indicates a hole
+      - `0` indicates the end of the set
+
+      In addition, there are search accelerator for increasing the performance
+      of insertion and querying. These values are stored in the jump list
+      and indicate the start of the nearest range.
 
       @class IndexSet
      */
@@ -688,11 +895,43 @@ define("index-set",
         this.__ranges__ = [0];
         this.length     = 0;
         this.firstIndex = -1;
-        this.lastIndex  = 0;
+        this.lastIndex  = -1;
         return this;
       },
 
       removeIndexesInRange: function (rangeStart, rangeEnd) {
+      },
+
+      // .............................................
+      // Set membership
+      //
+
+      containsIndex: function (index) {
+        return containsIndex(this, index);
+      },
+
+      containsIndexes: function (indexes) {
+        return containsIndexes(this, indexes);
+      },
+
+      containsIndexesInRange: function (rangeStart, rangeEnd) {
+        return containsIndexesInRange(this, rangeStart, rangeEnd);
+      },
+
+      intersectsIndex: function (index) {
+        return intersectsIndex(this, index);
+      },
+
+      intersectsIndexes: function (indexes) {
+        return intersectsIndexes(this, indexes);
+      },
+
+      intersectsIndexesInRange: function (rangeStart, rangeEnd) {
+        return intersectsIndexesInRange(this, rangeStart, rangeEnd);
+      },
+
+      rangeStartForIndex: function (index) {
+        return rangeStartForIndex(this, index);
       },
 
       // .............................................
@@ -722,8 +961,24 @@ define("index-set",
         return reduce.apply(null, args);
       },
 
+      some: function (fn, scope) {
+        return some(this, fn, scope);
+      },
+
+      every: function (fn, scope) {
+        return every(this, fn, scope);
+      },
+
       forEachRange: function (fn, scope) {
         forEachRange(this, fn, scope);
+      },
+
+      someRange: function (fn, scope) {
+        someRange(this, fn, scope);
+      },
+
+      everyRange: function (fn, scope) {
+        everyRange(this, fn, scope);
       }
     };
 

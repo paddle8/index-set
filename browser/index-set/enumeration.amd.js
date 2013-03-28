@@ -80,6 +80,52 @@ define(
       return value;
     }
 
+    function some(indexSet, fn, scope) {
+      var ranges = indexSet.__ranges__,
+          cursor = 0,
+          next   = ranges[cursor];
+
+      if (typeof scope === "undefined") {
+        scope = null;
+      }
+
+      while (next !== ENV.END_OF_SET) {
+        if (next > 0) {
+          for (var i = cursor; i < next; i++) {
+            if (fn.call(scope, i, indexSet)) {
+              return true;
+            }
+          }
+        }
+        cursor = Math.abs(next);
+        next = ranges[cursor];
+      }
+      return false;
+    }
+
+    function every(indexSet, fn, scope) {
+      var ranges = indexSet.__ranges__,
+          cursor = 0,
+          next   = ranges[cursor];
+
+      if (typeof scope === "undefined") {
+        scope = null;
+      }
+
+      while (next !== ENV.END_OF_SET) {
+        if (next > 0) {
+          for (var i = cursor; i < next; i++) {
+            if (!fn.call(scope, i, indexSet)) {
+              return false;
+            }
+          }
+        }
+        cursor = Math.abs(next);
+        next = ranges[cursor];
+      }
+      return true;
+    }
+
     function forEachRange(indexSet, fn, scope) {
       var ranges = indexSet.__ranges__,
           cursor = 0,
@@ -98,9 +144,55 @@ define(
       }
     }
 
+    function someRange(indexSet, fn, scope) {
+      var ranges = indexSet.__ranges__,
+          cursor = 0,
+          next   = ranges[cursor];
+
+      if (typeof scope === "undefined") {
+        scope = null;
+      }
+
+      while (next !== ENV.END_OF_SET) {
+        if (next > 0) {
+          if (fn.call(scope, cursor, next - cursor, indexSet)) {
+            return true;
+          }
+        }
+        cursor = Math.abs(next);
+        next = ranges[cursor];
+      }
+      return false;
+    }
+
+    function everyRange(indexSet, fn, scope) {
+      var ranges = indexSet.__ranges__,
+          cursor = 0,
+          next   = ranges[cursor];
+
+      if (typeof scope === "undefined") {
+        scope = null;
+      }
+
+      while (next !== ENV.END_OF_SET) {
+        if (next > 0) {
+          if (!fn.call(scope, cursor, next - cursor, indexSet)) {
+            return false;
+          }
+        }
+        cursor = Math.abs(next);
+        next = ranges[cursor];
+      }
+      return true;
+    }
+
 
     __exports__.forEach = forEach;
     __exports__.map = map;
     __exports__.reduce = reduce;
+    __exports__.some = some;
+    __exports__.every = every;
     __exports__.forEachRange = forEachRange;
+    __exports__.someRange = someRange;
+    __exports__.everyRange = everyRange;
   });
