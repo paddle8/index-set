@@ -49,7 +49,7 @@ define("index-set/addition",
       @param  rangeLength {Number}
      */
     function addIndexesInRange(indexSet, rangeStart, rangeLength) {
-      var lastIndex = indexSet.lastIndex,
+      var lastIndex = indexSet.lastIndex + 1,
           ranges    = indexSet.__ranges__,
           cursor, next, delta;
 
@@ -91,7 +91,7 @@ define("index-set/addition",
 
         // Mark the last index in the range as the end of the set
         ranges[lastIndex] = END_OF_SET;
-        indexSet.lastIndex = lastIndex;
+        indexSet.lastIndex = lastIndex - 1;
         indexSet.length   += delta;
 
         rangeLength = lastIndex - rangeStart;
@@ -108,7 +108,7 @@ define("index-set/addition",
         // Mark the end of the index set.
         ranges[rangeStart + rangeLength] = END_OF_SET;
 
-        indexSet.lastIndex = rangeStart + rangeLength;
+        indexSet.lastIndex = rangeStart + rangeLength - 1;
         indexSet.length += rangeLength;
 
         delta = rangeLength;
@@ -214,7 +214,7 @@ define("index-set/addition",
         ranges[rangeStart] = endOfRange;
 
         if (endOfRange > lastIndex) {
-          indexSet.lastIndex = endOfRange;
+          indexSet.lastIndex = endOfRange - 1;
         }
 
         // Adjust the length
@@ -463,7 +463,7 @@ define("index-set/range_start",
 
     function rangeStartForIndex(indexSet, index) {
       var ranges = indexSet.__ranges__,
-          lastIndex = indexSet.lastIndex,
+          lastIndex = indexSet.lastIndex + 1,
           rangeStart,
           next,
           hint;
@@ -545,8 +545,8 @@ define("index-set/removal",
   });
 
 define("index-set",
-  ["index-set/addition","index-set/env","index-set/coding","index-set/enumeration","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
+  ["index-set/addition","index-set/env","index-set/coding","index-set/enumeration"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__) {
     "use strict";
     var addIndex = __dependency1__.addIndex;
     var addIndexes = __dependency1__.addIndexes;
@@ -617,9 +617,9 @@ define("index-set",
 
         @property lastIndex
         @type Number
-        @default 0
+        @default -1
        */
-      lastIndex: 0,
+      lastIndex: -1,
 
       // .............................................
       // Mutable IndexSet methods
@@ -698,7 +698,8 @@ define("index-set",
       return deserialize(new IndexSet(), string);
     };
 
+    IndexSet.ENV = ENV;
 
-    __exports__.IndexSet = IndexSet;
-    __exports__.ENV = ENV;
+
+    return IndexSet;
   });

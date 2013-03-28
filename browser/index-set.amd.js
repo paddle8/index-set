@@ -1,6 +1,6 @@
 define(
-  ["index-set/addition","index-set/env","index-set/coding","index-set/enumeration","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
+  ["index-set/addition","index-set/env","index-set/coding","index-set/enumeration"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__) {
     "use strict";
     var addIndex = __dependency1__.addIndex;
     var addIndexes = __dependency1__.addIndexes;
@@ -71,9 +71,9 @@ define(
 
         @property lastIndex
         @type Number
-        @default 0
+        @default -1
        */
-      lastIndex: 0,
+      lastIndex: -1,
 
       // .............................................
       // Mutable IndexSet methods
@@ -152,7 +152,8 @@ define(
       return deserialize(new IndexSet(), string);
     };
 
+    IndexSet.ENV = ENV;
 
-    __exports__.IndexSet = IndexSet;
-    __exports__.ENV = ENV;
+
+    return IndexSet;
   });

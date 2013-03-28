@@ -49,7 +49,7 @@ define(
       @param  rangeLength {Number}
      */
     function addIndexesInRange(indexSet, rangeStart, rangeLength) {
-      var lastIndex = indexSet.lastIndex,
+      var lastIndex = indexSet.lastIndex + 1,
           ranges    = indexSet.__ranges__,
           cursor, next, delta;
 
@@ -91,7 +91,7 @@ define(
 
         // Mark the last index in the range as the end of the set
         ranges[lastIndex] = END_OF_SET;
-        indexSet.lastIndex = lastIndex;
+        indexSet.lastIndex = lastIndex - 1;
         indexSet.length   += delta;
 
         rangeLength = lastIndex - rangeStart;
@@ -108,7 +108,7 @@ define(
         // Mark the end of the index set.
         ranges[rangeStart + rangeLength] = END_OF_SET;
 
-        indexSet.lastIndex = rangeStart + rangeLength;
+        indexSet.lastIndex = rangeStart + rangeLength - 1;
         indexSet.length += rangeLength;
 
         delta = rangeLength;
@@ -214,7 +214,7 @@ define(
         ranges[rangeStart] = endOfRange;
 
         if (endOfRange > lastIndex) {
-          indexSet.lastIndex = endOfRange;
+          indexSet.lastIndex = endOfRange - 1;
         }
 
         // Adjust the length

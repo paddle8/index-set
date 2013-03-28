@@ -6,7 +6,7 @@ define(
 
     function rangeStartForIndex(indexSet, index) {
       var ranges = indexSet.__ranges__,
-          lastIndex = indexSet.lastIndex,
+          lastIndex = indexSet.lastIndex + 1,
           rangeStart,
           next,
           hint;
