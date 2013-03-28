@@ -3,7 +3,7 @@
 var set;
 module("IndexSet#lastIndex", {
   setup: function () {
-    set = new IndexSet.IndexSet();
+    set = new IndexSet();
   }
 });
 

@@ -8,7 +8,7 @@
 var set;
 module("IndexSet#addIndexesInRange", {
   setup: function() {
-    set = new IndexSet.IndexSet();
+    set = new IndexSet();
   }
 });
 
@@ -120,13 +120,13 @@ test("add range matching existing range", function() {
 //
 
 test("appending a range to end should merge into last range", function() {
-  set = new IndexSet.IndexSet();
+  set = new IndexSet();
   set.addIndexesInRange(2, 1);
   set.addIndexesInRange(3, 1);
   equal(set.lastIndex, 4, 'should have max');
   equal(set.length, 2, 'should have length');
 
-  set = new IndexSet.IndexSet();
+  set = new IndexSet();
   set.addIndexesInRange(2000, 1000);
   set.addIndexesInRange(3000, 1000);
   equal(set.lastIndex, 4000, 'should have max');
@@ -134,12 +134,12 @@ test("appending a range to end should merge into last range", function() {
 });
 
 test("appending range to start of empty set should create a single range", function() {
-  set = new IndexSet.IndexSet();
+  set = new IndexSet();
   set.addIndexesInRange(0, 2);
   equal(set.length, 2, 'should have length');
   equal(set.lastIndex, 2, 'should have max');
 
-  set = new IndexSet.IndexSet();
+  set = new IndexSet();
   set.addIndexesInRange(0, 2000);
   equal(set.length, 2000, 'should have length');
   equal(set.lastIndex, 2000, 'should have max');
@@ -151,7 +151,7 @@ test("appending range to start of empty set should create a single range", funct
 // demonstrate fixes for specific bugs here.
 
 test("adding ranges within the set shouldn't change the overall size of the set", function() {
-  set = new IndexSet.IndexSet();
+  set = new IndexSet();
   set.addIndexesInRange(1, 4);
   equal(set.length, 4);
 
