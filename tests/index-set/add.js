@@ -1,31 +1,25 @@
-// ==========================================================================
-// Project:   SproutCore - JavaScript Application Framework
-// Copyright: ©2006-2011 Apple Inc. and contributors.
-// License:   Licensed under MIT license (see license.js)
-// ==========================================================================
-
-/*global module test equal context ok deepEqual */
 var set;
+
 module("IndexSet#addIndexesInRange", {
-  setup: function() {
+  setup: function () {
     set = new IndexSet();
   }
 });
 
-function K (value) { return value; }
+function K(value) { return value; }
 
 // ..........................................................
 // BASIC ADDS
 //
 
-test("adding a range to end of set", function() {
+test("adding a range to end of set", function () {
   set.addIndexesInRange(1000, 5);
   equal(set.length, 5);
   equal(set.lastIndex, 1004);
   deepEqual(set.map(K), [1000, 1001, 1002, 1003, 1004]);
 });
 
-test("addding a range into middle of empty range", function() {
+test("addding a range into middle of empty range", function () {
   set.addIndexesInRange(100, 2);
   equal(set.firstIndex, 100);
 
@@ -35,7 +29,7 @@ test("addding a range into middle of empty range", function() {
   deepEqual(set.map(K), [10, 100, 101]);
 });
 
-test("add range overlapping front edge of range", function() {
+test("add range overlapping front edge of range", function () {
   set.addIndexesInRange(100, 2);
   equal(set.firstIndex, 100);
 
@@ -45,7 +39,7 @@ test("add range overlapping front edge of range", function() {
   deepEqual(set.map(K), [99, 100, 101]);
 });
 
-test("add range overlapping last edge of range", function() {
+test("add range overlapping last edge of range", function () {
   set.addIndexesInRange(100, 2);
   set.addIndexesInRange(200, 2);
   deepEqual(set.map(K), [100, 101, 200, 201]);
@@ -56,7 +50,7 @@ test("add range overlapping last edge of range", function() {
   deepEqual(set.map(K), [100, 101, 102, 200, 201], 'should include 101..102');
 });
 
-test("add range overlapping two ranges, merging into one", function() {
+test("add range overlapping two ranges, merging into one", function () {
   set.addIndexesInRange(100, 2);
   set.addIndexesInRange(110, 2);
   deepEqual(set.map(K), [100, 101, 110, 111]);
@@ -68,7 +62,7 @@ test("add range overlapping two ranges, merging into one", function() {
   deepEqual(set.map(K), [100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111], 'should include one range 100..111');
 });
 
-test("add range overlapping three ranges, merging into one", function() {
+test("add range overlapping three ranges, merging into one", function () {
   set.addIndexesInRange(100, 2)
      .addIndexesInRange(105, 2)
      .addIndexesInRange(110, 2);
@@ -81,7 +75,7 @@ test("add range overlapping three ranges, merging into one", function() {
   deepEqual(set.map(K), [100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111], 'should include one range 100..111');
 });
 
-test("add range partially overlapping one range and replacing another range, merging into one", function() {
+test("add range partially overlapping one range and replacing another range, merging into one", function () {
   set.addIndexesInRange(100, 2).addIndexesInRange(105, 2);
   deepEqual(set.map(K), [100, 101, 105, 106], 'should have two sets');
 
@@ -93,7 +87,7 @@ test("add range partially overlapping one range and replacing another range, mer
   deepEqual(set.map(K), [100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110], 'should include one range 100..110');
 });
 
-test("add range overlapping last index", function() {
+test("add range overlapping last index", function () {
   set.addIndexesInRange(100, 2);
   equal(set.firstIndex, 100, 'precond - first index is 100');
 
@@ -104,7 +98,7 @@ test("add range overlapping last index", function() {
   deepEqual(set.map(K), [100, 101, 102]);
 });
 
-test("add range matching existing range", function() {
+test("add range matching existing range", function () {
   set.addIndexesInRange(100, 5);
   equal(set.firstIndex, 100, 'precond - first index is 100');
 
@@ -116,13 +110,13 @@ test("add range matching existing range", function() {
 });
 
 // ..........................................................
-// OTHER BEHAVIORS
+// Other behaviors
 //
 
-test("appending a range to end should merge into last range", function() {
+test("appending a range to end should merge into last range", function () {
   set = new IndexSet();
-  set.addIndexesInRange(2, 1);
-  set.addIndexesInRange(3, 1);
+  set.addIndex(2);
+  set.addIndex(3);
   equal(set.lastIndex, 3);
   equal(set.length, 2);
 
@@ -133,7 +127,7 @@ test("appending a range to end should merge into last range", function() {
   equal(set.length, 2000);
 });
 
-test("appending range to start of empty set should create a single range", function() {
+test("appending range to start of empty set should create a single range", function () {
   set = new IndexSet();
   set.addIndexesInRange(0, 2);
   equal(set.length, 2);
@@ -146,11 +140,30 @@ test("appending range to start of empty set should create a single range", funct
 });
 
 // ..........................................................
+// NORMALIZED PARAMETER CASES
+//
+
+test("add with no params should do nothing", function () {
+  set.add();
+  deepEqual(set.map(K), []);
+});
+
+test("add with single number should add index only", function () {
+  set.addIndex(2);
+  deepEqual(set.map(K), [2]);
+});
+
+test("add with index set should add indexes in set", function() {
+  set.addIndexes(new IndexSet().add(2, 2).add(10, 2));
+  deepEqual(set.map(K), [2,3,10,11]);
+});
+
+// ..........................................................
 // SPECIAL CASES
 //
 // demonstrate fixes for specific bugs here.
 
-test("adding ranges within the set shouldn't change the overall size of the set", function() {
+test("adding ranges within the set shouldn't change the overall size of the set", function () {
   set = new IndexSet();
   set.addIndexesInRange(1, 4);
   equal(set.length, 4);
