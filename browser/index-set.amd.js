@@ -1,28 +1,31 @@
 define(
-  ["index-set/addition","index-set/env","index-set/coding","index-set/enumeration","index-set/queries","index-set/range_start"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__) {
+  ["index-set/addition","index-set/removal","index-set/env","index-set/coding","index-set/enumeration","index-set/queries","index-set/range_start"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__) {
     "use strict";
     var addIndex = __dependency1__.addIndex;
     var addIndexes = __dependency1__.addIndexes;
     var addIndexesInRange = __dependency1__.addIndexesInRange;
-    var ENV = __dependency2__.ENV;
-    var serialize = __dependency3__.serialize;
-    var deserialize = __dependency3__.deserialize;
-    var forEach = __dependency4__.forEach;
-    var map = __dependency4__.map;
-    var reduce = __dependency4__.reduce;
-    var some = __dependency4__.some;
-    var every = __dependency4__.every;
-    var forEachRange = __dependency4__.forEachRange;
-    var someRange = __dependency4__.someRange;
-    var everyRange = __dependency4__.everyRange;
-    var containsIndex = __dependency5__.containsIndex;
-    var containsIndexes = __dependency5__.containsIndexes;
-    var containsIndexesInRange = __dependency5__.containsIndexesInRange;
-    var intersectsIndex = __dependency5__.intersectsIndex;
-    var intersectsIndexes = __dependency5__.intersectsIndexes;
-    var intersectsIndexesInRange = __dependency5__.intersectsIndexesInRange;
-    var rangeStartForIndex = __dependency6__.rangeStartForIndex;
+    var removeIndex = __dependency2__.removeIndex;
+    var removeIndexes = __dependency2__.removeIndexes;
+    var removeIndexesInRange = __dependency2__.removeIndexesInRange;
+    var ENV = __dependency3__.ENV;
+    var serialize = __dependency4__.serialize;
+    var deserialize = __dependency4__.deserialize;
+    var forEach = __dependency5__.forEach;
+    var map = __dependency5__.map;
+    var reduce = __dependency5__.reduce;
+    var some = __dependency5__.some;
+    var every = __dependency5__.every;
+    var forEachRange = __dependency5__.forEachRange;
+    var someRange = __dependency5__.someRange;
+    var everyRange = __dependency5__.everyRange;
+    var containsIndex = __dependency6__.containsIndex;
+    var containsIndexes = __dependency6__.containsIndexes;
+    var containsIndexesInRange = __dependency6__.containsIndexesInRange;
+    var intersectsIndex = __dependency6__.intersectsIndex;
+    var intersectsIndexes = __dependency6__.intersectsIndexes;
+    var intersectsIndexesInRange = __dependency6__.intersectsIndexesInRange;
+    var rangeStartForIndex = __dependency7__.rangeStartForIndex;
 
     var slice = Array.prototype.slice;
 
@@ -119,9 +122,13 @@ define(
       },
 
       removeIndex: function (index) {
+        removeIndex(this, index);
+        return this;
       },
 
       removeIndexes: function (indexSet) {
+        removeIndexes(this, indexSet);
+        return this;
       },
 
       /**
@@ -138,6 +145,8 @@ define(
       },
 
       removeIndexesInRange: function (rangeStart, rangeEnd) {
+        removeIndexesInRange(this, rangeStart, rangeEnd);
+        return this;
       },
 
       // .............................................
@@ -148,8 +157,8 @@ define(
         return containsIndex(this, index);
       },
 
-      containsIndexes: function (indexes) {
-        return containsIndexes(this, indexes);
+      containsIndexes: function (indexSet) {
+        return containsIndexes(this, indexSet);
       },
 
       containsIndexesInRange: function (rangeStart, rangeEnd) {
@@ -160,8 +169,8 @@ define(
         return intersectsIndex(this, index);
       },
 
-      intersectsIndexes: function (indexes) {
-        return intersectsIndexes(this, indexes);
+      intersectsIndexes: function (indexSet) {
+        return intersectsIndexes(this, indexSet);
       },
 
       intersectsIndexesInRange: function (rangeStart, rangeEnd) {

@@ -1,10 +1,11 @@
 define(
-  ["index-set/range_start","index-set/env","index-set/hint","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
+  ["index-set/range_start","index-set/enumeration","index-set/env","index-set/hint","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
     "use strict";
     var rangeStartForIndex = __dependency1__.rangeStartForIndex;
-    var ENV = __dependency2__.ENV;
-    var addHintFor = __dependency3__.addHintFor;
+    var forEachRange = __dependency2__.forEachRange;
+    var ENV = __dependency3__.ENV;
+    var addHintFor = __dependency4__.addHintFor;
 
     var END_OF_SET = ENV.END_OF_SET;
 
@@ -17,29 +18,17 @@ define(
       addIndexesInRange(indexSet, index, 1);
     }
 
+    function addRange(rangeStart, rangeLength) {
+      addIndexesInRange(this, rangeStart, rangeLength);
+    }
+
     /**
       @method addIndexes
       @param  indexSet {IndexSet} The target index set to add the indexes to.
       @param  indexes  {IndexSet} The indexes to add to the target index set.
      */
     function addIndexes(indexSet, indexes) {
-      var ranges = indexes.__ranges__,
-          cursor,
-          next;
-
-      if (ranges != null) {
-        cursor = 0;
-        next = ranges[ptr];
-
-        // Iterate until we've reached the end of the index set
-        while (next !== 0) {
-          if (next > 0) {
-            addIndexesInRange(indexSet, cursor, next - cursor);
-          }
-          cursor = Math.abs(cursor);
-          next   = ranges[cursor];
-        }
-      }
+      forEachRange(indexes, addRange, indexSet);
     }
 
     /**
@@ -124,7 +113,7 @@ define(
         cursor = rangeStartForIndex(indexSet, rangeStart);
         next   = ranges[cursor];
 
-        var endOfRange = rangeStart + rangeLength;
+        var rangeEnd = rangeStart + rangeLength;
         delta = 0;
 
         // The range boundary that we found was the same as
@@ -142,10 +131,10 @@ define(
           ranges[cursor] = 0 - rangeStart;
 
           // The hole extends beyond the range being added
-          if (Math.abs(next) > endOfRange) {
+          if (Math.abs(next) > rangeEnd) {
             // Mark the start and end of the set.
-            ranges[rangeStart] = 0 - endOfRange;
-            ranges[endOfRange] = next;
+            ranges[rangeStart] = 0 - rangeEnd;
+            ranges[rangeEnd] = next;
 
           // The end of the range has already been taken care of
           } else {
@@ -156,8 +145,8 @@ define(
         } else {
           // Normalize variables so we can merge ranges together
           rangeStart = cursor;
-          if (next > endOfRange) {
-            endOfRange = next;
+          if (next > rangeEnd) {
+            rangeEnd = next;
           }
         }
 
@@ -165,25 +154,25 @@ define(
         // range being added
         var value;
         cursor = rangeStart;
-        while (cursor < endOfRange) {
+        while (cursor < rangeEnd) {
           // Find the next boundary location.
           value = ranges[cursor];
 
           // We reached the end of the set;
           // Mark the end of the range as the end of the set
           if (value === END_OF_SET) {
-            ranges[endOfRange] = END_OF_SET;
-            next = endOfRange;
-            delta += endOfRange - cursor;
+            ranges[rangeEnd] = END_OF_SET;
+            next = rangeEnd;
+            delta += rangeEnd - cursor;
 
           } else {
             next = Math.abs(value);
 
             // The start of the next range is after
             // the end of the range being added
-            if (next > endOfRange) {
-              ranges[endOfRange] = value;
-              next = endOfRange;
+            if (next > rangeEnd) {
+              ranges[rangeEnd] = value;
+              next = rangeEnd;
             }
 
             // The range has been added;
@@ -203,25 +192,24 @@ define(
         // The cursor should be the end of range being added.
         // If the range following the cursor is in the index set,
         // clean up the redundant boundary
-        cursor = ranges[endOfRange];
+        cursor = ranges[rangeEnd];
         if (cursor > 0) {
-          delete ranges[endOfRange];
-          endOfRange = cursor;
+          delete ranges[rangeEnd];
+          rangeEnd = cursor;
         }
 
-        // Finally, mark the beginning of the
-        // set as a filled range
-        ranges[rangeStart] = endOfRange;
+        // Finally, mark the beginning of the range as filled
+        ranges[rangeStart] = rangeEnd;
 
-        if (endOfRange > lastIndex) {
-          indexSet.lastIndex = endOfRange - 1;
+        if (rangeEnd > lastIndex) {
+          indexSet.lastIndex = rangeEnd - 1;
         }
 
         // Adjust the length
         indexSet.length += delta;
 
         // Compute the hint range
-        rangeLength = endOfRange - rangeStart;
+        rangeLength = rangeEnd - rangeStart;
       }
 
       // The firstIndex of the set might've changed

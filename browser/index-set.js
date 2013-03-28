@@ -32,12 +32,13 @@ var define, require;
 })();
 
 define("index-set/addition",
-  ["index-set/range_start","index-set/env","index-set/hint","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
+  ["index-set/range_start","index-set/enumeration","index-set/env","index-set/hint","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
     "use strict";
     var rangeStartForIndex = __dependency1__.rangeStartForIndex;
-    var ENV = __dependency2__.ENV;
-    var addHintFor = __dependency3__.addHintFor;
+    var forEachRange = __dependency2__.forEachRange;
+    var ENV = __dependency3__.ENV;
+    var addHintFor = __dependency4__.addHintFor;
 
     var END_OF_SET = ENV.END_OF_SET;
 
@@ -50,29 +51,17 @@ define("index-set/addition",
       addIndexesInRange(indexSet, index, 1);
     }
 
+    function addRange(rangeStart, rangeLength) {
+      addIndexesInRange(this, rangeStart, rangeLength);
+    }
+
     /**
       @method addIndexes
       @param  indexSet {IndexSet} The target index set to add the indexes to.
       @param  indexes  {IndexSet} The indexes to add to the target index set.
      */
     function addIndexes(indexSet, indexes) {
-      var ranges = indexes.__ranges__,
-          cursor,
-          next;
-
-      if (ranges != null) {
-        cursor = 0;
-        next = ranges[ptr];
-
-        // Iterate until we've reached the end of the index set
-        while (next !== 0) {
-          if (next > 0) {
-            addIndexesInRange(indexSet, cursor, next - cursor);
-          }
-          cursor = Math.abs(cursor);
-          next   = ranges[cursor];
-        }
-      }
+      forEachRange(indexes, addRange, indexSet);
     }
 
     /**
@@ -157,7 +146,7 @@ define("index-set/addition",
         cursor = rangeStartForIndex(indexSet, rangeStart);
         next   = ranges[cursor];
 
-        var endOfRange = rangeStart + rangeLength;
+        var rangeEnd = rangeStart + rangeLength;
         delta = 0;
 
         // The range boundary that we found was the same as
@@ -175,10 +164,10 @@ define("index-set/addition",
           ranges[cursor] = 0 - rangeStart;
 
           // The hole extends beyond the range being added
-          if (Math.abs(next) > endOfRange) {
+          if (Math.abs(next) > rangeEnd) {
             // Mark the start and end of the set.
-            ranges[rangeStart] = 0 - endOfRange;
-            ranges[endOfRange] = next;
+            ranges[rangeStart] = 0 - rangeEnd;
+            ranges[rangeEnd] = next;
 
           // The end of the range has already been taken care of
           } else {
@@ -189,8 +178,8 @@ define("index-set/addition",
         } else {
           // Normalize variables so we can merge ranges together
           rangeStart = cursor;
-          if (next > endOfRange) {
-            endOfRange = next;
+          if (next > rangeEnd) {
+            rangeEnd = next;
           }
         }
 
@@ -198,25 +187,25 @@ define("index-set/addition",
         // range being added
         var value;
         cursor = rangeStart;
-        while (cursor < endOfRange) {
+        while (cursor < rangeEnd) {
           // Find the next boundary location.
           value = ranges[cursor];
 
           // We reached the end of the set;
           // Mark the end of the range as the end of the set
           if (value === END_OF_SET) {
-            ranges[endOfRange] = END_OF_SET;
-            next = endOfRange;
-            delta += endOfRange - cursor;
+            ranges[rangeEnd] = END_OF_SET;
+            next = rangeEnd;
+            delta += rangeEnd - cursor;
 
           } else {
             next = Math.abs(value);
 
             // The start of the next range is after
             // the end of the range being added
-            if (next > endOfRange) {
-              ranges[endOfRange] = value;
-              next = endOfRange;
+            if (next > rangeEnd) {
+              ranges[rangeEnd] = value;
+              next = rangeEnd;
             }
 
             // The range has been added;
@@ -236,25 +225,24 @@ define("index-set/addition",
         // The cursor should be the end of range being added.
         // If the range following the cursor is in the index set,
         // clean up the redundant boundary
-        cursor = ranges[endOfRange];
+        cursor = ranges[rangeEnd];
         if (cursor > 0) {
-          delete ranges[endOfRange];
-          endOfRange = cursor;
+          delete ranges[rangeEnd];
+          rangeEnd = cursor;
         }
 
-        // Finally, mark the beginning of the
-        // set as a filled range
-        ranges[rangeStart] = endOfRange;
+        // Finally, mark the beginning of the range as filled
+        ranges[rangeStart] = rangeEnd;
 
-        if (endOfRange > lastIndex) {
-          indexSet.lastIndex = endOfRange - 1;
+        if (rangeEnd > lastIndex) {
+          indexSet.lastIndex = rangeEnd - 1;
         }
 
         // Adjust the length
         indexSet.length += delta;
 
         // Compute the hint range
-        rangeLength = endOfRange - rangeStart;
+        rangeLength = rangeEnd - rangeStart;
       }
 
       // The firstIndex of the set might've changed
@@ -333,6 +321,8 @@ define("index-set/enumeration",
     "use strict";
     var ENV = __dependency1__.ENV;
 
+    var END_OF_SET = ENV.END_OF_SET;
+
     function forEach(indexSet, fn, scope) {
       var ranges = indexSet.__ranges__,
           cursor = 0,
@@ -342,7 +332,7 @@ define("index-set/enumeration",
         scope = null;
       }
 
-      while (next !== ENV.END_OF_SET) {
+      while (next !== END_OF_SET) {
         if (next > 0) {
           for (var i = cursor; i < next; i++) {
             fn.call(scope, i, indexSet);
@@ -363,7 +353,7 @@ define("index-set/enumeration",
         scope = null;
       }
 
-      while (next !== ENV.END_OF_SET) {
+      while (next !== END_OF_SET) {
         if (next > 0) {
           for (var i = cursor; i < next; i++) {
             result.push(fn.call(scope, i, indexSet));
@@ -387,7 +377,7 @@ define("index-set/enumeration",
         isValueSet = true;
       }
 
-      while (next !== ENV.END_OF_SET) {
+      while (next !== END_OF_SET) {
         if (next > 0) {
           for (var i = cursor; i < next; i++) {
             if (isValueSet) {
@@ -418,7 +408,7 @@ define("index-set/enumeration",
         scope = null;
       }
 
-      while (next !== ENV.END_OF_SET) {
+      while (next !== END_OF_SET) {
         if (next > 0) {
           for (var i = cursor; i < next; i++) {
             if (fn.call(scope, i, indexSet)) {
@@ -441,7 +431,7 @@ define("index-set/enumeration",
         scope = null;
       }
 
-      while (next !== ENV.END_OF_SET) {
+      while (next !== END_OF_SET) {
         if (next > 0) {
           for (var i = cursor; i < next; i++) {
             if (!fn.call(scope, i, indexSet)) {
@@ -464,7 +454,7 @@ define("index-set/enumeration",
         scope = null;
       }
 
-      while (next !== ENV.END_OF_SET) {
+      while (next !== END_OF_SET) {
         if (next > 0) {
           fn.call(scope, cursor, next - cursor, indexSet);
         }
@@ -482,7 +472,7 @@ define("index-set/enumeration",
         scope = null;
       }
 
-      while (next !== ENV.END_OF_SET) {
+      while (next !== END_OF_SET) {
         if (next > 0) {
           if (fn.call(scope, cursor, next - cursor, indexSet)) {
             return true;
@@ -503,7 +493,7 @@ define("index-set/enumeration",
         scope = null;
       }
 
-      while (next !== ENV.END_OF_SET) {
+      while (next !== END_OF_SET) {
         if (next > 0) {
           if (!fn.call(scope, cursor, next - cursor, indexSet)) {
             return false;
@@ -735,16 +725,27 @@ define("index-set/range_start",
   });
 
 define("index-set/removal",
-  [],
-  function() {
+  ["index-set/range_start","index-set/enumeration","index-set/env","index-set/hint","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
     "use strict";
+    var rangeStartForIndex = __dependency1__.rangeStartForIndex;
+    var forEachRange = __dependency2__.forEachRange;
+    var ENV = __dependency3__.ENV;
+    var addHintFor = __dependency4__.addHintFor;
+
+    var END_OF_SET = ENV.END_OF_SET;
+
     /**
       @method removeIndex
       @param  indexSet {IndexSet} The target index set to remove the index from.
       @param  index    {Number}   The index to remove from the target index set.
      */
-    function removeIndex (indexSet, index) {
+    function removeIndex(indexSet, index) {
       removeIndexesInRange(indexSet, index, 1);
+    }
+
+    function removeRange(rangeStart, rangeLength) {
+      removeIndexesInRange(this, rangeStart, rangeLength);
     }
 
     /**
@@ -752,39 +753,176 @@ define("index-set/removal",
       @param  indexSet {IndexSet} The target index set to remove the indexes from.
       @param  indexes  {IndexSet} The indexes to remove from the target index set.
      */
-    function removeIndexes (indexSet, indexes) {
+    function removeIndexes(indexSet, indexes) {
+      forEachRange(indexes, addRange, indexSet);
     }
 
-    function removeIndexesInRange (indexSet, rangeStart, rangeLength) {
+    function removeIndexesInRange(indexSet, rangeStart, rangeLength) {
+      var lastIndex = indexSet.lastIndex + 1,
+          ranges    = indexSet.__ranges__,
+          rangeEnd  = rangeStart + rangeLength,
+          cursor,
+          next,
+          delta;
+
+      // The range being removed isn't in the set
+      if (rangeStart >= lastIndex) {
+        return this;
+      }
+
+      cursor = rangeStartForIndex(indexSet, rangeStart);
+      next   = ranges[cursor];
+
+      // The start of the range to remove is on a range boundary;
+      // iterate back to the previous range
+      if (rangeStart > 0 && cursor === rangeStart && next > 0) {
+        cursor = rangeStartForIndex(indexSet, rangeStart - 1);
+        next   = ranges[cursor];
+      }
+
+      // We found a range in the set
+      if (next > 0) {
+        ranges[cursor] = rangeStart;
+
+        // The range extends beyond the range being added
+        if (next > rangeEnd) {
+          // Mark the start and end of the set.
+          ranges[rangeStart] = rangeEnd;
+          ranges[rangeEnd]   = next;
+
+        // The end of the hole has already been taken care of
+        } else {
+          ranges[rangeStart] = next;
+        }
+
+      // The range we found is a hole
+      } else {
+       // Normalize variables so we can split ranges apart
+        rangeStart = cursor;
+        next       = Math.abs(next);
+        if (next > rangeEnd) {
+          rangeEnd = next;
+        }
+      }
+
+      // Walk ranges until we end up past the end of the
+      // range being removed
+      var value;
+      cursor = rangeStart;
+      while (cursor < rangeEnd) {
+        // Find the next boundary location.
+        value = ranges[cursor];
+
+        // We reached the end of the set;
+        // Mark the end of the range as the end of the set
+        if (value === END_OF_SET) {
+          ranges[rangeEnd] = END_OF_SET;
+          next = rangeEnd;
+
+        } else {
+          next = Math.abs(value);
+
+          // The start of the next range is after
+          // the end of the range being removed
+          if (next > rangeEnd) {
+            ranges[rangeEnd] = value;
+            next = rangeEnd;
+          }
+
+          // The range has been removed;
+          // Add to the delta if we have any indexes removed
+          if (value < 0) {
+            delta += next - cursor;
+          }
+        }
+
+        // Delete the range boundary.
+        delete ranges[cursor];
+
+        // Iterate to the next range boundary in the set
+        cursor = next;
+      }
+
+      // The cursor should be the end of range being added.
+      // If the range following the cursor is a hole,
+      // clean up the redundant boundary
+      cursor = ranges[rangeEnd];
+      if (cursor < 0) {
+        delete ranges[rangeEnd];
+        rangeEnd = Math.abs(cursor);
+      }
+
+      // If the next range is the end of the set,
+      // move the end of the set to be the start of the
+      // range being removed.
+      if (ranges[rangeEnd] === END_OF_SET) {
+        delete ranges[rangeEnd];
+        ranges[rangeStart] = END_OF_SET;
+        indexSet.lastIndex = rangeStart - 1;
+
+      // Finally, mark the beginning of the range as a hole
+      } else {
+        ranges[rangeStart] = 0 - rangeEnd;
+      }
+
+      indexSet.length -= delta;
+
+      // Compute hint length
+      rangeLength = rangeEnd - rangeStart;
+
+      addHintFor(indexSet, rangeStart, rangeLength);
+
+      // The firstIndex of the set might've changed
+      if (delta !== 0) {
+        cursor = ranges[0];
+
+        // No indexes for there to be a firstIndex
+        if (cursor === END_OF_SET) {
+          indexSet.firstIndex = -1;
+        // We have a filled range starting at 0
+        } else if (cursor > 0) {
+          indexSet.firstIndex = 0;
+        // Use the pointer to the first filled range
+        } else {
+          indexSet.firstIndex = Math.abs(cursor);
+        }
+      }
     }
 
+
+    __exports__.removeIndex = removeIndex;
+    __exports__.removeIndexes = removeIndexes;
+    __exports__.removeIndexesInRange = removeIndexesInRange;
   });
 
 define("index-set",
-  ["index-set/addition","index-set/env","index-set/coding","index-set/enumeration","index-set/queries","index-set/range_start"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__) {
+  ["index-set/addition","index-set/removal","index-set/env","index-set/coding","index-set/enumeration","index-set/queries","index-set/range_start"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__) {
     "use strict";
     var addIndex = __dependency1__.addIndex;
     var addIndexes = __dependency1__.addIndexes;
     var addIndexesInRange = __dependency1__.addIndexesInRange;
-    var ENV = __dependency2__.ENV;
-    var serialize = __dependency3__.serialize;
-    var deserialize = __dependency3__.deserialize;
-    var forEach = __dependency4__.forEach;
-    var map = __dependency4__.map;
-    var reduce = __dependency4__.reduce;
-    var some = __dependency4__.some;
-    var every = __dependency4__.every;
-    var forEachRange = __dependency4__.forEachRange;
-    var someRange = __dependency4__.someRange;
-    var everyRange = __dependency4__.everyRange;
-    var containsIndex = __dependency5__.containsIndex;
-    var containsIndexes = __dependency5__.containsIndexes;
-    var containsIndexesInRange = __dependency5__.containsIndexesInRange;
-    var intersectsIndex = __dependency5__.intersectsIndex;
-    var intersectsIndexes = __dependency5__.intersectsIndexes;
-    var intersectsIndexesInRange = __dependency5__.intersectsIndexesInRange;
-    var rangeStartForIndex = __dependency6__.rangeStartForIndex;
+    var removeIndex = __dependency2__.removeIndex;
+    var removeIndexes = __dependency2__.removeIndexes;
+    var removeIndexesInRange = __dependency2__.removeIndexesInRange;
+    var ENV = __dependency3__.ENV;
+    var serialize = __dependency4__.serialize;
+    var deserialize = __dependency4__.deserialize;
+    var forEach = __dependency5__.forEach;
+    var map = __dependency5__.map;
+    var reduce = __dependency5__.reduce;
+    var some = __dependency5__.some;
+    var every = __dependency5__.every;
+    var forEachRange = __dependency5__.forEachRange;
+    var someRange = __dependency5__.someRange;
+    var everyRange = __dependency5__.everyRange;
+    var containsIndex = __dependency6__.containsIndex;
+    var containsIndexes = __dependency6__.containsIndexes;
+    var containsIndexesInRange = __dependency6__.containsIndexesInRange;
+    var intersectsIndex = __dependency6__.intersectsIndex;
+    var intersectsIndexes = __dependency6__.intersectsIndexes;
+    var intersectsIndexesInRange = __dependency6__.intersectsIndexesInRange;
+    var rangeStartForIndex = __dependency7__.rangeStartForIndex;
 
     var slice = Array.prototype.slice;
 
@@ -881,9 +1019,13 @@ define("index-set",
       },
 
       removeIndex: function (index) {
+        removeIndex(this, index);
+        return this;
       },
 
       removeIndexes: function (indexSet) {
+        removeIndexes(this, indexSet);
+        return this;
       },
 
       /**
@@ -900,6 +1042,8 @@ define("index-set",
       },
 
       removeIndexesInRange: function (rangeStart, rangeEnd) {
+        removeIndexesInRange(this, rangeStart, rangeEnd);
+        return this;
       },
 
       // .............................................
@@ -910,8 +1054,8 @@ define("index-set",
         return containsIndex(this, index);
       },
 
-      containsIndexes: function (indexes) {
-        return containsIndexes(this, indexes);
+      containsIndexes: function (indexSet) {
+        return containsIndexes(this, indexSet);
       },
 
       containsIndexesInRange: function (rangeStart, rangeEnd) {
@@ -922,8 +1066,8 @@ define("index-set",
         return intersectsIndex(this, index);
       },
 
-      intersectsIndexes: function (indexes) {
-        return intersectsIndexes(this, indexes);
+      intersectsIndexes: function (indexSet) {
+        return intersectsIndexes(this, indexSet);
       },
 
       intersectsIndexesInRange: function (rangeStart, rangeEnd) {

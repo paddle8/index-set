@@ -4,6 +4,8 @@ define(
     "use strict";
     var ENV = __dependency1__.ENV;
 
+    var END_OF_SET = ENV.END_OF_SET;
+
     function forEach(indexSet, fn, scope) {
       var ranges = indexSet.__ranges__,
           cursor = 0,
@@ -13,7 +15,7 @@ define(
         scope = null;
       }
 
-      while (next !== ENV.END_OF_SET) {
+      while (next !== END_OF_SET) {
         if (next > 0) {
           for (var i = cursor; i < next; i++) {
             fn.call(scope, i, indexSet);
@@ -34,7 +36,7 @@ define(
         scope = null;
       }
 
-      while (next !== ENV.END_OF_SET) {
+      while (next !== END_OF_SET) {
         if (next > 0) {
           for (var i = cursor; i < next; i++) {
             result.push(fn.call(scope, i, indexSet));
@@ -58,7 +60,7 @@ define(
         isValueSet = true;
       }
 
-      while (next !== ENV.END_OF_SET) {
+      while (next !== END_OF_SET) {
         if (next > 0) {
           for (var i = cursor; i < next; i++) {
             if (isValueSet) {
@@ -89,7 +91,7 @@ define(
         scope = null;
       }
 
-      while (next !== ENV.END_OF_SET) {
+      while (next !== END_OF_SET) {
         if (next > 0) {
           for (var i = cursor; i < next; i++) {
             if (fn.call(scope, i, indexSet)) {
@@ -112,7 +114,7 @@ define(
         scope = null;
       }
 
-      while (next !== ENV.END_OF_SET) {
+      while (next !== END_OF_SET) {
         if (next > 0) {
           for (var i = cursor; i < next; i++) {
             if (!fn.call(scope, i, indexSet)) {
@@ -135,7 +137,7 @@ define(
         scope = null;
       }
 
-      while (next !== ENV.END_OF_SET) {
+      while (next !== END_OF_SET) {
         if (next > 0) {
           fn.call(scope, cursor, next - cursor, indexSet);
         }
@@ -153,7 +155,7 @@ define(
         scope = null;
       }
 
-      while (next !== ENV.END_OF_SET) {
+      while (next !== END_OF_SET) {
         if (next > 0) {
           if (fn.call(scope, cursor, next - cursor, indexSet)) {
             return true;
@@ -174,7 +176,7 @@ define(
         scope = null;
       }
 
-      while (next !== ENV.END_OF_SET) {
+      while (next !== END_OF_SET) {
         if (next > 0) {
           if (!fn.call(scope, cursor, next - cursor, indexSet)) {
             return false;
