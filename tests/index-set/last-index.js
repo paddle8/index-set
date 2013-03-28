@@ -8,13 +8,14 @@ module("IndexSet#lastIndex", {
 });
 
 test("newly created index", function() {
-  equal(set.lastIndex, 0, 'lastIndex should be 0');
+  equal(set.lastIndex, -1, 'there are no indexes in the set');
 });
 
 test("after adding one range", function() {
   set.addIndexesInRange(4, 2);
-  equal(set.lastIndex, 6, 'lastIndex should be one greater than lastIndex index');
+  equal(set.lastIndex, 5);
 });
+
 /*
 test("after adding range then removing part of range", function() {
   set.addIndexesInRange(4,4).remove(6,4);
@@ -24,7 +25,7 @@ test("after adding range then removing part of range", function() {
 test("after adding range several disjoint ranges", function() {
   set.addIndexesInRange(4, 4)
      .addIndexesInRange(6000, 1);
-  equal(set.lastIndex, 6001, 'lastIndex should be one greater than lastIndex index');
+  equal(set.lastIndex, 6000);
 });
 /*
 test("after removing disjoint range", function() {
