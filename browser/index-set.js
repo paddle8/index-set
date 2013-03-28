@@ -959,12 +959,12 @@ define("index-set",
     function invokeMethodFor(indexSet, method, args) {
       if (args.length === 1) {
         if (args[0] instanceof IndexSet) {
-          indexSet[method + "Indexes"](args[0]);
+          return indexSet[method + "Indexes"](args[0]);
         } else if (toString.call(args[0]) === T_NUMBER) {
-          indexSet[method + "Index"](args[0]);
+          return indexSet[method + "Index"](args[0]);
         }
       } else if (args.length === 2) {
-        indexSet[method + "IndexesInRange"](args[0], args[1]);
+        return indexSet[method + "IndexesInRange"](args[0], args[1]);
       }
     }
 
