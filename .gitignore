@@ -1,0 +1,9 @@
+*~
+.*~
+\#*
+*.gem
+*.rbc
+.bundle
+.DS_Store
+.rbenv-version
+.rvmrc
