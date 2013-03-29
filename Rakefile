@@ -81,3 +81,45 @@ task :dist => [:install_transpiler, "browser/index-set.js", "browser/index-set.a
 
 desc "compile index-set"
 task :default => :dist
+
+task :test do |t, args|
+  require "rack"
+  require "webrick"
+  require "colored"
+
+  unless system("which phantomjs > /dev/null 2>&1")
+    abort "PhantomJS is not installed. Download from http://phantomjs.org"
+  end
+
+  server = fork do
+    Rack::Server.start(:config    => "config.ru",
+                       :Logger    => WEBrick::Log.new("/dev/null"),
+                       :AccessLog => [],
+                       :Port      => 9999)
+  end
+
+  success = true
+  test_path = File.expand_path("../tests", __FILE__)
+  cmd = "phantomjs #{test_path}/run-qunit.js \"http://localhost:9999/tests\""
+  system(cmd)
+
+  # A bit of a hack until we can figure this out on Travis
+  tries = 0
+  while tries < 3 && $?.exitstatus === 124
+    tries += 1
+    puts "\nTimed Out. Trying again...\n".yellow
+    system(cmd)
+  end
+
+  success &&= $?.success?
+
+  Process.kill(:SIGINT, server)
+  Process.wait
+
+  if success
+    puts "\nTests Passed".green
+  else
+    puts "\nTests Failed".red
+    exit(1)
+  end
+end
