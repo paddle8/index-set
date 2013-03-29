@@ -1,16 +1,18 @@
-# This is the root of our app
-@root = File.expand_path(File.dirname(__FILE__))
+require 'colored'
+root   = File.dirname(__FILE__)
+tests  = File.expand_path("tests",   root)
+source = File.expand_path("browser", root)
 
 run Proc.new { |env|
-  # Extract the requested path from the request
   path = Rack::Utils.unescape(env['PATH_INFO'])
-  index_file = @root + "#{path}/index.html"
 
-  if File.exists?(index_file)
-    # Return the index
-    [200, {'Content-Type' => 'text/html'}, [File.read(index_file)]]
+  if path == '/'
+    file = File.read(File.join(tests, "index.html"))
+    [200, {'Content-Type' => 'text/html'}, [file]]
+  elsif path == '/browser/index-set.js'
+    file = File.read(File.join(source, 'index-set.js'))
+    [200, {'Content-Type' => 'text/javascript'}, [file]]
   else
-    # Pass the request to the directory app
-    Rack::Directory.new(@root).call(env)
+    Rack::Directory.new(tests).call(env)
   end
 }

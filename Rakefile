@@ -100,7 +100,7 @@ task :test do |t, args|
 
   success = true
   test_path = File.expand_path("../tests", __FILE__)
-  cmd = "phantomjs #{test_path}/run-qunit.js \"http://localhost:9999/tests\""
+  cmd = "phantomjs #{test_path}/run-qunit.js \"http://localhost:9999/\""
   system(cmd)
 
   # A bit of a hack until we can figure this out on Travis
