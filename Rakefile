@@ -123,3 +123,7 @@ task :test do |t, args|
     exit(1)
   end
 end
+
+task :autotest do
+  system("kicker -e 'rake dist; rake test'")
+end
