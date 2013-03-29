@@ -247,7 +247,7 @@ define("index-set/coding",
       if (rangeLength === 1) {
         this.push(rangeStart);
       } else {
-        this.push(rangeStart + ".." + (rangeStart + rangeLength));
+        this.push(rangeStart + ".." + (rangeStart + rangeLength - 1));
       }
     }
 
@@ -258,6 +258,11 @@ define("index-set/coding",
     }
 
     function deserialize(indexSet, string) {
+      // Handle an empty set
+      if (string === '') {
+        return indexSet;
+      }
+
       var ranges = string.split(','),
           range,
           rangeStart,
@@ -268,7 +273,7 @@ define("index-set/coding",
         if (range.indexOf('..') !== -1) {
           range = range.split('..');
           rangeStart = parseInt(range[0], 10);
-          rangeEnd   = parseInt(range[1], 10);
+          rangeEnd   = parseInt(range[1], 10) + 1;
           indexSet.addIndexesInRange(rangeStart, rangeEnd - rangeStart);
         } else {
           indexSet.addIndex(parseInt(range, 10));
@@ -1001,15 +1006,24 @@ define("index-set",
         T_NUMBER = '[object Number]',
         END_OF_SET = ENV.END_OF_SET;
 
-    function invokeMethodFor(indexSet, method, args) {
+    /**
+      @private
+      Routes a function call from the overloaded method to the
+      concrete method call by doing argument checking.
+
+      @method invokeConcreteMethodFor
+      @param indexSet {IndexSet}
+      @param fnName
+     */
+    function invokeConcreteMethodFor(indexSet, fnName, args) {
       if (args.length === 1) {
         if (args[0] instanceof IndexSet) {
-          return indexSet[method + "Indexes"](args[0]);
+          return indexSet[fnName + "Indexes"](args[0]);
         } else if (toString.call(args[0]) === T_NUMBER) {
-          return indexSet[method + "Index"](args[0]);
+          return indexSet[fnName + "Index"](args[0]);
         }
       } else if (args.length === 2) {
-        return indexSet[method + "IndexesInRange"](args[0], args[1]);
+        return indexSet[fnName + "IndexesInRange"](args[0], args[1]);
       }
     }
 
@@ -1050,7 +1064,7 @@ define("index-set",
      */
     function IndexSet() {
       this.__ranges__ = [END_OF_SET];
-      invokeMethodFor(this, 'add', slice.call(arguments));
+      invokeConcreteMethodFor(this, 'add', slice.call(arguments));
     };
 
     IndexSet.prototype = {
@@ -1089,26 +1103,66 @@ define("index-set",
       // Mutable IndexSet methods
       //
 
+      /**
+        Add a single index to the `IndexSet`.
+        This index must be a natural number.
+
+        @method addIndex
+        @param index {Number}
+        @return IndexSet
+       */
       addIndex: function (index) {
         addIndex(this, index);
         return this;
       },
 
+      /**
+        Add a collection of indexes to the `IndexSet`.
+
+        @method addIndexes
+        @param indexSet {IndexSet}
+        @return IndexSet
+       */
       addIndexes: function (indexSet) {
         addIndexes(this, indexSet);
         return this;
       },
 
-      addIndexesInRange: function (rangeStart, rangeEnd) {
-        addIndexesInRange(this, rangeStart, rangeEnd);
+      /**
+        Add a range of indexes to the `IndexSet`.
+        The range values provided indicate the start
+        of the range and the length of the range.
+
+        @method addIndexesInRange
+        @param rangeStart  {Number} A natural number that indicates the start of the range to add.
+        @param rangeLength {Number} A natural number that indicates the length of the range.
+        @return IndexSet
+       */
+      addIndexesInRange: function (rangeStart, rangeLength) {
+        addIndexesInRange(this, rangeStart, rangeLength);
         return this;
       },
 
+      /**
+        Remove a single index from the `IndexSet`.
+        The index must be a natural number.
+
+        @method removeIndex
+        @param index {Number}
+        @return IndexSet
+       */
       removeIndex: function (index) {
         removeIndex(this, index);
         return this;
       },
 
+      /**
+        Remove a collection of indexes from the `IndexSet`.
+
+        @method removeIndexes
+        @param indexSet {IndexSet}
+        @return IndexSet
+       */
       removeIndexes: function (indexSet) {
         removeIndexes(this, indexSet);
         return this;
@@ -1118,6 +1172,7 @@ define("index-set",
         Remove all indexes stored in the index set.
 
         @method removeAllIndexes
+        @return IndexSet
        */
       removeAllIndexes: function () {
         this.__ranges__ = [0];
@@ -1127,6 +1182,16 @@ define("index-set",
         return this;
       },
 
+      /**
+        Remove a range of indexes from the `IndexSet`.
+        The range values provided indicate the start
+        of the range and the length of the range.
+
+        @method addIndexesInRange
+        @param rangeStart  {Number} A natural number that indicates the start of the range to remove.
+        @param rangeLength {Number} A natural number that indicates the length of the range.
+        @return IndexSet
+       */
       removeIndexesInRange: function (rangeStart, rangeEnd) {
         removeIndexesInRange(this, rangeStart, rangeEnd);
         return this;
@@ -1136,26 +1201,76 @@ define("index-set",
       // Set membership
       //
 
+      /**
+        Returns whether or not the set contains the
+        index passed in.
+
+        @method containsIndex
+        @param index {Number}
+        @return Boolean
+       */
       containsIndex: function (index) {
         return containsIndex(this, index);
       },
 
+      /**
+        Returns whether or not the set contains the
+        index set.
+
+        @method containsIndexes
+        @param indexSet {IndexSet}
+        @return Boolean
+       */
       containsIndexes: function (indexSet) {
         return containsIndexes(this, indexSet);
       },
 
-      containsIndexesInRange: function (rangeStart, rangeEnd) {
-        return containsIndexesInRange(this, rangeStart, rangeEnd);
+      /**
+        Returns whether or not the set contains the
+        range of indexes passed in.
+
+        @method containsIndexes
+        @param rangeStart  {Number}
+        @param rangeLength {Number}
+        @return Boolean
+       */
+      containsIndexesInRange: function (rangeStart, rangeLength) {
+        return containsIndexesInRange(this, rangeStart, rangeLength);
       },
 
+      /**
+        Returns whether or not the index intersects the
+        any indexes in the set.
+
+        @method intersectsIndex
+        @param index {Number}
+        @return Boolean
+       */
       intersectsIndex: function (index) {
         return intersectsIndex(this, index);
       },
 
+      /**
+        Returns whether or not any indexes in the passed
+        set are included in the set.
+
+        @method intersectsIndexes
+        @param indexSet {IndexSet}
+        @return Boolean
+       */
       intersectsIndexes: function (indexSet) {
         return intersectsIndexes(this, indexSet);
       },
 
+      /**
+        Returns whether or not the range contains any
+        indexes in the set.
+
+        @method intersectsIndexesInRange
+        @param rangeStart  {Number}
+        @param rangeLength {Number}
+        @return Boolean
+       */
       intersectsIndexesInRange: function (rangeStart, rangeEnd) {
         return intersectsIndexesInRange(this, rangeStart, rangeEnd);
       },
@@ -1189,21 +1304,21 @@ define("index-set",
       //
 
       add: function () {
-        invokeMethodFor(this, 'add', slice.call(arguments));
+        invokeConcreteMethodFor(this, 'add', slice.call(arguments));
         return this;
       },
 
       remove: function () {
-        invokeMethodFor(this, 'remove', slice.call(arguments));
+        invokeConcreteMethodFor(this, 'remove', slice.call(arguments));
         return this;
       },
 
       intersects: function () {
-        return invokeMethodFor(this, 'intersects', slice.call(arguments));
+        return invokeConcreteMethodFor(this, 'intersects', slice.call(arguments));
       },
 
       contains: function () {
-        return invokeMethodFor(this, 'contains', slice.call(arguments));
+        return invokeConcreteMethodFor(this, 'contains', slice.call(arguments));
       },
 
       equals: function (indexSet) {

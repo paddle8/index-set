@@ -8,7 +8,7 @@ define(
       if (rangeLength === 1) {
         this.push(rangeStart);
       } else {
-        this.push(rangeStart + ".." + (rangeStart + rangeLength));
+        this.push(rangeStart + ".." + (rangeStart + rangeLength - 1));
       }
     }
 
@@ -19,6 +19,11 @@ define(
     }
 
     function deserialize(indexSet, string) {
+      // Handle an empty set
+      if (string === '') {
+        return indexSet;
+      }
+
       var ranges = string.split(','),
           range,
           rangeStart,
@@ -29,7 +34,7 @@ define(
         if (range.indexOf('..') !== -1) {
           range = range.split('..');
           rangeStart = parseInt(range[0], 10);
-          rangeEnd   = parseInt(range[1], 10);
+          rangeEnd   = parseInt(range[1], 10) + 1;
           indexSet.addIndexesInRange(rangeStart, rangeEnd - rangeStart);
         } else {
           indexSet.addIndex(parseInt(range, 10));
