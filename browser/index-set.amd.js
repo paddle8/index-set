@@ -1,6 +1,6 @@
 define(
-  ["index-set/addition","index-set/removal","index-set/env","index-set/coding","index-set/enumeration","index-set/queries","index-set/indexes","index-set/range_start"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__, __dependency8__) {
+  ["index-set/addition","index-set/removal","index-set/env","index-set/coding","index-set/enumeration","index-set/queries","index-set/indexes","index-set/range_start","index-set/observing"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__, __dependency8__, __dependency9__) {
     "use strict";
     var addIndex = __dependency1__.addIndex;
     var addIndexes = __dependency1__.addIndexes;
@@ -31,6 +31,9 @@ define(
     var indexGreaterThanIndex = __dependency7__.indexGreaterThanIndex;
     var indexGreaterThanOrEqualToIndex = __dependency7__.indexGreaterThanOrEqualToIndex;
     var rangeStartForIndex = __dependency8__.rangeStartForIndex;
+    var trigger = __dependency9__.trigger;
+    var on = __dependency9__.on;
+    var off = __dependency9__.off;
 
     var slice = Array.prototype.slice,
         toString = Object.prototype.toString,
@@ -94,8 +97,26 @@ define(
       @class IndexSet
      */
     function IndexSet() {
-      this.__ranges__ = [END_OF_SET];
-      invokeConcreteMethodFor(this, 'add', slice.call(arguments));
+      var args = slice.call(arguments);
+
+      // Optimize creating a cloned index set
+      if (args.length == 1 && args[0] instanceof IndexSet) {
+        var source = args[0];
+
+        // Copy over properties rather than
+        // manually adding them.
+        //
+        // This results in a faster clone for
+        // very large index sets.
+        this.__ranges__ = source.__ranges__.slice();
+        this.length = source.length;
+        this.firstIndex = source.firstIndex;
+        this.lastIndex = source.lastIndex;
+
+      } else {
+        this.__ranges__ = [END_OF_SET];
+        invokeConcreteMethodFor(this, 'add', args);
+      }
     };
 
     IndexSet.prototype = {
@@ -206,10 +227,19 @@ define(
         @return IndexSet
        */
       removeAllIndexes: function () {
+        trigger(this, 'length:before',      0);
+        trigger(this, 'firstIndex:before', -1);
+        trigger(this, 'lastIndex:before',  -1);
+
         this.__ranges__ = [0];
         this.length     = 0;
         this.firstIndex = -1;
         this.lastIndex  = -1;
+
+        trigger(this, 'length:change',      0);
+        trigger(this, 'firstIndex:change', -1);
+        trigger(this, 'lastIndex:change',  -1);
+
         return this;
       },
 
@@ -364,6 +394,18 @@ define(
         return indexGreaterThanIndex(this, index);
       },
 
+      destroy: function () {
+        this.removeAllIndexes();
+      },
+
+      // .............................................
+      // Copying
+      //
+
+      copy: function () {
+        return new IndexSet(this);
+      },
+
       // .............................................
       // Coding
       //
@@ -372,6 +414,17 @@ define(
         return serialize(this);
       },
 
+      // .............................................
+      // Observing
+      //
+
+      on: function (key, target, method) {
+        return on(this, key, target, method);
+      },
+
+      off: function (key, target, method) {
+        return off(this, key, target, method);
+      },
 
       // .............................................
       // Enumeration

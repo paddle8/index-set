@@ -1,11 +1,12 @@
 define(
-  ["index-set/range_start","index-set/enumeration","index-set/env","index-set/hint","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
+  ["index-set/range_start","index-set/enumeration","index-set/env","index-set/hint","index-set/observing","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __exports__) {
     "use strict";
     var rangeStartForIndex = __dependency1__.rangeStartForIndex;
     var forEachRange = __dependency2__.forEachRange;
     var ENV = __dependency3__.ENV;
     var addHintFor = __dependency4__.addHintFor;
+    var set = __dependency5__.set;
 
     var END_OF_SET = ENV.END_OF_SET;
 
@@ -80,8 +81,8 @@ define(
 
         // Mark the last index in the range as the end of the set
         ranges[lastIndex] = END_OF_SET;
-        indexSet.lastIndex = lastIndex - 1;
-        indexSet.length   += delta;
+        set(indexSet, 'lastIndex', lastIndex - 1);
+        set(indexSet, 'length',    indexSet.length + delta);
 
         rangeLength = lastIndex - rangeStart;
 
@@ -97,8 +98,8 @@ define(
         // Mark the end of the index set.
         ranges[rangeStart + rangeLength] = END_OF_SET;
 
-        indexSet.lastIndex = rangeStart + rangeLength - 1;
-        indexSet.length += rangeLength;
+        set(indexSet, 'lastIndex', rangeStart + rangeLength - 1);
+        set(indexSet, 'length',    indexSet.length + rangeLength);
 
         delta = rangeLength;
 
@@ -202,11 +203,11 @@ define(
         ranges[rangeStart] = rangeEnd;
 
         if (rangeEnd > lastIndex) {
-          indexSet.lastIndex = rangeEnd - 1;
+          set(indexSet, 'lastIndex', rangeEnd - 1);
         }
 
         // Adjust the length
-        indexSet.length += delta;
+        set(indexSet, 'length', indexSet.length + delta);
 
         // Compute the hint range
         rangeLength = rangeEnd - rangeStart;
@@ -218,13 +219,13 @@ define(
 
         // No indexes for there to be a firstIndex
         if (cursor === END_OF_SET) {
-          indexSet.firstIndex = -1;
+          set(indexSet, 'firstIndex', -1);
         // We have a filled range starting at 0
         } else if (cursor > 0) {
-          indexSet.firstIndex = 0;
+          set(indexSet, 'firstIndex', 0);
         // Use the pointer to the first filled range
         } else {
-          indexSet.firstIndex = Math.abs(cursor);
+          set(indexSet, 'firstIndex', Math.abs(cursor));
         }
       }
 

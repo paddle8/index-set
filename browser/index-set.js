@@ -32,13 +32,14 @@ var define, require;
 })();
 
 define("index-set/addition",
-  ["index-set/range_start","index-set/enumeration","index-set/env","index-set/hint","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
+  ["index-set/range_start","index-set/enumeration","index-set/env","index-set/hint","index-set/observing","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __exports__) {
     "use strict";
     var rangeStartForIndex = __dependency1__.rangeStartForIndex;
     var forEachRange = __dependency2__.forEachRange;
     var ENV = __dependency3__.ENV;
     var addHintFor = __dependency4__.addHintFor;
+    var set = __dependency5__.set;
 
     var END_OF_SET = ENV.END_OF_SET;
 
@@ -113,8 +114,8 @@ define("index-set/addition",
 
         // Mark the last index in the range as the end of the set
         ranges[lastIndex] = END_OF_SET;
-        indexSet.lastIndex = lastIndex - 1;
-        indexSet.length   += delta;
+        set(indexSet, 'lastIndex', lastIndex - 1);
+        set(indexSet, 'length',    indexSet.length + delta);
 
         rangeLength = lastIndex - rangeStart;
 
@@ -130,8 +131,8 @@ define("index-set/addition",
         // Mark the end of the index set.
         ranges[rangeStart + rangeLength] = END_OF_SET;
 
-        indexSet.lastIndex = rangeStart + rangeLength - 1;
-        indexSet.length += rangeLength;
+        set(indexSet, 'lastIndex', rangeStart + rangeLength - 1);
+        set(indexSet, 'length',    indexSet.length + rangeLength);
 
         delta = rangeLength;
 
@@ -235,11 +236,11 @@ define("index-set/addition",
         ranges[rangeStart] = rangeEnd;
 
         if (rangeEnd > lastIndex) {
-          indexSet.lastIndex = rangeEnd - 1;
+          set(indexSet, 'lastIndex', rangeEnd - 1);
         }
 
         // Adjust the length
-        indexSet.length += delta;
+        set(indexSet, 'length', indexSet.length + delta);
 
         // Compute the hint range
         rangeLength = rangeEnd - rangeStart;
@@ -251,13 +252,13 @@ define("index-set/addition",
 
         // No indexes for there to be a firstIndex
         if (cursor === END_OF_SET) {
-          indexSet.firstIndex = -1;
+          set(indexSet, 'firstIndex', -1);
         // We have a filled range starting at 0
         } else if (cursor > 0) {
-          indexSet.firstIndex = 0;
+          set(indexSet, 'firstIndex', 0);
         // Use the pointer to the first filled range
         } else {
-          indexSet.firstIndex = Math.abs(cursor);
+          set(indexSet, 'firstIndex', Math.abs(cursor));
         }
       }
 
@@ -649,6 +650,135 @@ define("index-set/indexes",
     __exports__.indexGreaterThanOrEqualToIndex = indexGreaterThanOrEqualToIndex;
   });
 
+define("index-set/observing",
+  ["exports"],
+  function(__exports__) {
+    "use strict";
+    var toString = Object.prototype.toString,
+        slice = Array.prototype.slice,
+        META_KEY = '__js-index_set__' + (new Date().getTime()),
+        T_FUNCTION = '[object Function]',
+        T_STRING   = '[object String]',
+        T_NUMBER   = '[object Number]',
+        T_BOOLEAN  = '[object Boolean]',
+        T_OBJECT   = '[object Object]',
+        uuid = 0,
+        st = {}; // string cache
+
+    function meta(o, create) {
+      var info = o && o[META_KEY];
+      if (create && info == null) {
+        info = o[META_KEY] = {};
+      }
+      return info;  
+    }
+
+    function metaPath(o, path, value) {
+      var i = 0, len = path ? path.length : 0,
+          m;
+
+      if (arguments.length === 3) {
+        m = meta(o, true);
+        for (; i < len - 1; i++) {
+          o = m[path[i]] || {};
+          m[path[i]] = o;
+          m = o;
+        }
+        m[path[len - 1]] = value;
+        m = value;
+      } else {
+        m = meta(o);
+        for (; i < len; i++) {
+          m = m ? m[path[i]] : undefined;
+        }
+      }
+      return m;
+    }
+
+    function guidFor(o) {
+      if (o === null) return '(null)';
+      if (o === void(0)) return '(undefined)';
+
+      var cache, result, m,
+          type = toString.call(o);
+
+      switch(type) {
+      case T_NUMBER:
+        result = 'nu' + o;
+        break;
+      case T_STRING:
+        result = st[o];
+        if (!result) result = st[o] = 'st' + (uuid++);
+        break;
+      case T_BOOLEAN:
+        result = o ? '(true)' : '(false)';
+        break;
+      default:
+        if (o === Object) return '{}';
+        if (o === Array) return '[]';
+        m = meta(o, true);
+        result = m.guid;
+        if (!result) result = m.guid = 'cr' + (uuid++);
+      }
+      return result;
+    }
+
+    function set(hostObject, key, value) {
+      var currentValue = hostObject[key];
+
+      // Only set values if they have changed
+      if (currentValue !== value) {
+        trigger(hostObject, key + ':before', value);
+        hostObject[key] = value;
+        trigger(hostObject, key + ':change', value);
+      }
+    }
+
+    function on(hostObject, event, target, method) {
+      if (toString.call(method) !== T_FUNCTION) {
+        throw new TypeError(method + ' is not callable.');
+      }
+
+      metaPath(hostObject, ['events', event, guidFor(target), guidFor(method)], {
+        method: method,
+        target:  target
+      });
+    }
+
+    function off(hostObject, event, target, method) {
+      var m = metaPath(hostObject, ['events', event, guidFor(target)]);
+
+      if (m) {
+        delete m[guidFor(method)];
+      }
+    }
+
+    function trigger(hostObject, event, value) {
+      var targetSets = metaPath(hostObject, ['events', event]),
+          args = slice.call(arguments),
+          subscription,
+          set,
+          subscriptions, k;
+
+      if (targetSets) {
+        for (set in targetSets) {
+          subscriptions = targetSets[set];
+          for (k in subscriptions) {
+            subscription = subscriptions[k];
+
+            subscription.method.apply(subscription.target, args);
+          }
+        }
+      }
+    }
+
+
+    __exports__.set = set;
+    __exports__.on = on;
+    __exports__.off = off;
+    __exports__.trigger = trigger;
+  });
+
 define("index-set/queries",
   ["index-set/range_start","index-set/enumeration","index-set/env","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
@@ -830,13 +960,14 @@ define("index-set/range_start",
   });
 
 define("index-set/removal",
-  ["index-set/range_start","index-set/enumeration","index-set/env","index-set/hint","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
+  ["index-set/range_start","index-set/enumeration","index-set/env","index-set/hint","index-set/observing","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __exports__) {
     "use strict";
     var rangeStartForIndex = __dependency1__.rangeStartForIndex;
     var forEachRange = __dependency2__.forEachRange;
     var ENV = __dependency3__.ENV;
     var addHintFor = __dependency4__.addHintFor;
+    var set = __dependency5__.set;
 
     var END_OF_SET = ENV.END_OF_SET;
 
@@ -963,14 +1094,14 @@ define("index-set/removal",
       if (ranges[rangeEnd] === END_OF_SET) {
         delete ranges[rangeEnd];
         ranges[rangeStart] = END_OF_SET;
-        indexSet.lastIndex = rangeStart - 1;
+        set(indexSet, 'lastIndex', rangeStart - 1);
 
       // Finally, mark the beginning of the range as a hole
       } else {
         ranges[rangeStart] = 0 - rangeEnd;
       }
 
-      indexSet.length -= delta;
+      set(indexSet, 'length', indexSet.length - delta);
 
       // Compute hint length
       rangeLength = rangeEnd - rangeStart;
@@ -983,13 +1114,13 @@ define("index-set/removal",
 
         // No indexes for there to be a firstIndex
         if (cursor === END_OF_SET) {
-          indexSet.firstIndex = -1;
+          set(indexSet, 'firstIndex', -1);
         // We have a filled range starting at 0
         } else if (cursor > 0) {
-          indexSet.firstIndex = 0;
+          set(indexSet, 'firstIndex', 0);
         // Use the pointer to the first filled range
         } else {
-          indexSet.firstIndex = Math.abs(cursor);
+          set(indexSet, 'firstIndex', Math.abs(cursor));
         }
       }
     }
@@ -1001,8 +1132,8 @@ define("index-set/removal",
   });
 
 define("index-set",
-  ["index-set/addition","index-set/removal","index-set/env","index-set/coding","index-set/enumeration","index-set/queries","index-set/indexes","index-set/range_start"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__, __dependency8__) {
+  ["index-set/addition","index-set/removal","index-set/env","index-set/coding","index-set/enumeration","index-set/queries","index-set/indexes","index-set/range_start","index-set/observing"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__, __dependency8__, __dependency9__) {
     "use strict";
     var addIndex = __dependency1__.addIndex;
     var addIndexes = __dependency1__.addIndexes;
@@ -1033,6 +1164,9 @@ define("index-set",
     var indexGreaterThanIndex = __dependency7__.indexGreaterThanIndex;
     var indexGreaterThanOrEqualToIndex = __dependency7__.indexGreaterThanOrEqualToIndex;
     var rangeStartForIndex = __dependency8__.rangeStartForIndex;
+    var trigger = __dependency9__.trigger;
+    var on = __dependency9__.on;
+    var off = __dependency9__.off;
 
     var slice = Array.prototype.slice,
         toString = Object.prototype.toString,
@@ -1096,8 +1230,26 @@ define("index-set",
       @class IndexSet
      */
     function IndexSet() {
-      this.__ranges__ = [END_OF_SET];
-      invokeConcreteMethodFor(this, 'add', slice.call(arguments));
+      var args = slice.call(arguments);
+
+      // Optimize creating a cloned index set
+      if (args.length == 1 && args[0] instanceof IndexSet) {
+        var source = args[0];
+
+        // Copy over properties rather than
+        // manually adding them.
+        //
+        // This results in a faster clone for
+        // very large index sets.
+        this.__ranges__ = source.__ranges__.slice();
+        this.length = source.length;
+        this.firstIndex = source.firstIndex;
+        this.lastIndex = source.lastIndex;
+
+      } else {
+        this.__ranges__ = [END_OF_SET];
+        invokeConcreteMethodFor(this, 'add', args);
+      }
     };
 
     IndexSet.prototype = {
@@ -1208,10 +1360,19 @@ define("index-set",
         @return IndexSet
        */
       removeAllIndexes: function () {
+        trigger(this, 'length:before',      0);
+        trigger(this, 'firstIndex:before', -1);
+        trigger(this, 'lastIndex:before',  -1);
+
         this.__ranges__ = [0];
         this.length     = 0;
         this.firstIndex = -1;
         this.lastIndex  = -1;
+
+        trigger(this, 'length:change',      0);
+        trigger(this, 'firstIndex:change', -1);
+        trigger(this, 'lastIndex:change',  -1);
+
         return this;
       },
 
@@ -1366,6 +1527,18 @@ define("index-set",
         return indexGreaterThanIndex(this, index);
       },
 
+      destroy: function () {
+        this.removeAllIndexes();
+      },
+
+      // .............................................
+      // Copying
+      //
+
+      copy: function () {
+        return new IndexSet(this);
+      },
+
       // .............................................
       // Coding
       //
@@ -1374,6 +1547,17 @@ define("index-set",
         return serialize(this);
       },
 
+      // .............................................
+      // Observing
+      //
+
+      on: function (key, target, method) {
+        return on(this, key, target, method);
+      },
+
+      off: function (key, target, method) {
+        return off(this, key, target, method);
+      },
 
       // .............................................
       // Enumeration
