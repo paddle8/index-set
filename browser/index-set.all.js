@@ -957,7 +957,7 @@ define("index-set/removal",
       @param  indexes  {IndexSet} The indexes to remove from the target index set.
      */
     function removeIndexes(indexSet, indexes) {
-      forEachRange(indexes, addRange, indexSet);
+      forEachRange(indexes, removeRange, indexSet);
     }
 
     function removeIndexesInRange(indexSet, rangeStart, rangeLength) {
@@ -966,7 +966,7 @@ define("index-set/removal",
           rangeEnd  = rangeStart + rangeLength,
           cursor,
           next,
-          delta;
+          delta = 0;
 
       // The range being removed isn't in the set
       if (rangeStart >= lastIndex) {
@@ -1034,7 +1034,7 @@ define("index-set/removal",
 
           // The range has been removed;
           // Add to the delta if we have any indexes removed
-          if (value < 0) {
+          if (value > 0) {
             delta += next - cursor;
           }
         }
