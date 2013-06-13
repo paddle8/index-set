@@ -11,6 +11,7 @@ define(
     var END_OF_SET = ENV.END_OF_SET;
 
     /**
+      @private
       @method addIndex
       @param  indexSet {IndexSet} The target index set to add the index to.
       @param  index    {Number}   The index to add to the target index set.
@@ -24,6 +25,7 @@ define(
     }
 
     /**
+      @private
       @method addIndexes
       @param  indexSet {IndexSet} The target index set to add the indexes to.
       @param  indexes  {IndexSet} The indexes to add to the target index set.
@@ -33,6 +35,7 @@ define(
     }
 
     /**
+      @private
       @method addIndexesInRange
       @param  indexSet    {IndexSet}
       @param  rangeStart  {Number}

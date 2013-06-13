@@ -18,7 +18,13 @@ define(
       if (create && info == null) {
         info = o[META_KEY] = {};
       }
-      return info;  
+      return info;
+    }
+
+    function destroy(o) {
+      if (o != null) {
+        delete o[META_KEY];
+      }
     }
 
     function metaPath(o, path, value) {
@@ -125,4 +131,5 @@ define(
     __exports__.on = on;
     __exports__.off = off;
     __exports__.trigger = trigger;
+    __exports__.destroy = destroy;
   });

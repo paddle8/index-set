@@ -11,6 +11,7 @@ define(
     var END_OF_SET = ENV.END_OF_SET;
 
     /**
+      @private
       @method removeIndex
       @param  indexSet {IndexSet} The target index set to remove the index from.
       @param  index    {Number}   The index to remove from the target index set.
@@ -24,6 +25,7 @@ define(
     }
 
     /**
+      @private
       @method removeIndexes
       @param  indexSet {IndexSet} The target index set to remove the indexes from.
       @param  indexes  {IndexSet} The indexes to remove from the target index set.
