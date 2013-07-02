@@ -8,7 +8,7 @@ var define, require;
     registry[name] = { deps: deps, callback: callback };
   };
 
-  require = function require(name) {
+  require = function (name) {
     if (seen[name]) { return seen[name]; }
     seen[name] = {};
 
