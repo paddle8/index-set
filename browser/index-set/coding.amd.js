@@ -8,7 +8,7 @@ define(
       if (rangeLength === 1) {
         this.push(rangeStart);
       } else {
-        this.push(rangeStart + ".." + (rangeStart + rangeLength - 1));
+        this.push(rangeStart + "-" + (rangeStart + rangeLength - 1));
       }
     }
 
@@ -31,8 +31,8 @@ define(
 
       for (var i = 0, len = ranges.length; i < len; i++) {
         range = ranges[i];
-        if (range.indexOf('..') !== -1) {
-          range = range.split('..');
+        if (range.indexOf('-') !== -1) {
+          range = range.split('-');
           rangeStart = parseInt(range[0], 10);
           rangeEnd   = parseInt(range[1], 10) + 1;
           indexSet.addIndexesInRange(rangeStart, rangeEnd - rangeStart);
