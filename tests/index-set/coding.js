@@ -61,3 +61,7 @@ test("deserializing out of order ranges and indexes", function () {
 test("deserializing lists with trailing commas", function () {
   deepEqual(IndexSet.deserialize("30,3-4,").map(K), [3, 4, 30]);
 });
+
+test("deserializing lists with trailing dashes", function () {
+  deepEqual(IndexSet.deserialize("30,3-").map(K), [3, 30]);
+});

@@ -278,7 +278,11 @@ define("index-set/coding",
           range = range.split('-');
           rangeStart = parseInt(range[0], 10);
           rangeEnd   = parseInt(range[1], 10) + 1;
-          indexSet.addIndexesInRange(rangeStart, rangeEnd - rangeStart);
+          if (isNaN(rangeEnd)) {
+            indexSet.addIndex(rangeStart);
+          } else {
+            indexSet.addIndexesInRange(rangeStart, rangeEnd - rangeStart);
+          }
         } else {
           rangeStart = parseInt(range, 10);
           if (!isNaN(rangeStart)) {
