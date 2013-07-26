@@ -62,6 +62,41 @@ test("deserializing lists with trailing commas", function () {
   deepEqual(IndexSet.deserialize("30,3-4,").map(K), [3, 4, 30]);
 });
 
-test("deserializing lists with trailing dashes", function () {
+test("deserializing incomplete ranges", function () {
   deepEqual(IndexSet.deserialize("30,3-").map(K), [3, 30]);
+});
+
+test("deserializing inverted ranges", function () {
+  deepEqual(IndexSet.deserialize("30,3-1").map(K), [1, 2, 3, 30]);
+});
+
+test("deserializing zero-length ranges", function () {
+  deepEqual(IndexSet.deserialize("30,3-3").map(K), [3, 30]);
+});
+
+
+module("IndexSet#deserialize (strict)");
+
+test("deserializing lists with trailing commas throws an error", function () {
+  throws(function () {
+    IndexSet.deserialize("30,3-4,", true);
+  }, SyntaxError);
+});
+
+test("deserializing incomplete ranges throws an error", function () {
+  throws(function () {
+    IndexSet.deserialize("30,3-", true);
+  }, SyntaxError);
+});
+
+test("deserializing inverted ranges throws an error", function () {
+  throws(function () {
+    IndexSet.deserialize("30,3-1", true);
+  }, SyntaxError);
+});
+
+test("deserializing zero-length ranges throws an error", function () {
+  throws(function () {
+    IndexSet.deserialize("30,3-3", true);
+  }, SyntaxError);
 });

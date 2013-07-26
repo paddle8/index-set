@@ -294,7 +294,7 @@ define("index-set/coding",
       return buffer.join(',');
     }
 
-    function deserialize(indexSet, string) {
+    function deserialize(indexSet, string, strict) {
       // Handle an empty set
       if (string === '') {
         return indexSet;
@@ -310,16 +310,37 @@ define("index-set/coding",
         if (range.indexOf('-') !== -1) {
           range = range.split('-');
           rangeStart = parseInt(range[0], 10);
-          rangeEnd   = parseInt(range[1], 10) + 1;
+          rangeEnd   = parseInt(range[1], 10);
+
           if (isNaN(rangeEnd)) {
-            indexSet.addIndex(rangeStart);
-          } else {
-            indexSet.addIndexesInRange(rangeStart, rangeEnd - rangeStart);
+            if (strict) {
+              throw new SyntaxError('Expected a complete range, instead got "' + ranges[i] + '".');
+            }
+            rangeEnd = rangeStart;
           }
+
+          if (rangeEnd < rangeStart) {
+            if (strict) {
+              throw new SyntaxError('Expected an ascending range, instead got a descending one: "' + ranges[i] + '".');
+            }
+
+            var swap = rangeEnd;
+            rangeEnd   = rangeStart;
+            rangeStart = swap;
+          } else if (rangeEnd == rangeStart && strict) {
+            throw new SyntaxError('Expected a range, not a no-op range: "' + ranges[i] + '".');
+          }
+
+          // Include the rangeEnd
+          rangeEnd += 1;
+
+          indexSet.addIndexesInRange(rangeStart, rangeEnd - rangeStart);
         } else {
           rangeStart = parseInt(range, 10);
           if (!isNaN(rangeStart)) {
-            indexSet.addIndex(rangeStart);        
+            indexSet.addIndex(rangeStart);
+          } else if (strict) {
+            throw new SyntaxError('Expected an index, but got non-number: "' + range + '".');
           }
         }
       }
@@ -1812,10 +1833,11 @@ define("index-set",
       @method deserialize
       @static
       @param string {String} The string to deserialize.
+      @param strict {Boolean} Whether errors should be thrown if the serialization is invalid.
       @return {IndexSet} The string represented as an IndexSet.
      */
-    IndexSet.deserialize = function (string) {
-      return deserialize(new IndexSet(), string);
+    IndexSet.deserialize = function (string, strict) {
+      return deserialize(new IndexSet(), string, strict);
     };
 
     IndexSet.ENV = ENV;

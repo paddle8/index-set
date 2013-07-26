@@ -660,10 +660,11 @@ define(
       @method deserialize
       @static
       @param string {String} The string to deserialize.
+      @param strict {Boolean} Whether errors should be thrown if the serialization is invalid.
       @return {IndexSet} The string represented as an IndexSet.
      */
-    IndexSet.deserialize = function (string) {
-      return deserialize(new IndexSet(), string);
+    IndexSet.deserialize = function (string, strict) {
+      return deserialize(new IndexSet(), string, strict);
     };
 
     IndexSet.ENV = ENV;
