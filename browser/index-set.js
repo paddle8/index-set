@@ -313,7 +313,10 @@ define("index-set/coding",
           rangeEnd   = parseInt(range[1], 10) + 1;
           indexSet.addIndexesInRange(rangeStart, rangeEnd - rangeStart);
         } else {
-          indexSet.addIndex(parseInt(range, 10));
+          rangeStart = parseInt(range, 10);
+          if (!isNaN(rangeStart)) {
+            indexSet.addIndex(rangeStart);        
+          }
         }
       }
       return indexSet;

@@ -57,3 +57,7 @@ test("deserializing mixed ranges and indexes", function () {
 test("deserializing out of order ranges and indexes", function () {
   deepEqual(IndexSet.deserialize("30,3-4,22,7,5,49-52").map(K), [3, 4, 5, 7, 22, 30, 49, 50, 51, 52]);
 });
+
+test("deserializing lists with trailing commas", function () {
+  deepEqual(IndexSet.deserialize("30,3-4,").map(K), [3, 4, 30]);
+});
