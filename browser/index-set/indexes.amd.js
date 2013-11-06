@@ -28,6 +28,10 @@ define(
         }
         index  = cursor - 1;
         cursor = rangeStartForIndex(indexSet, index);
+
+        if (cursor === -1) {
+          return cursor;
+        }
       }
 
       return index;

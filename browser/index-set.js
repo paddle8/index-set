@@ -637,6 +637,10 @@ define("index-set/indexes",
         }
         index  = cursor - 1;
         cursor = rangeStartForIndex(indexSet, index);
+
+        if (cursor === -1) {
+          return cursor;
+        }
       }
 
       return index;
@@ -981,6 +985,14 @@ define("index-set/range_start",
       // We don't care whether we're in a hole or not
       } else {
         next = Math.abs(next);
+      }
+
+      // If there was a malformed index set, where there
+      // were filled indexes, but no items in the set,
+      // make that known and clean up the index set
+      if (next === ENV.END_OF_SET) {
+        indexSet.removeAllIndexes();
+        return -1;
       }
 
       // Step through the ranges in our set until we
