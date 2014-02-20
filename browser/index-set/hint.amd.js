@@ -13,7 +13,7 @@ define(
 
       while (hintLocation < limit) {
         // Ensure we are in the current range
-        while (next !== 0 && next <= hintLocation) {
+        while (next !== ENV.END_OF_SET && next <= hintLocation) {
           rangeStart = next;
           next = Math.abs(ranges[rangeStart]);
         }
@@ -23,7 +23,8 @@ define(
           delete ranges[hintLocation];
 
         // Don't mark a hint if it's a range boundary
-        } else if (hintLocation !== rangeStart) {
+        } else if (hintLocation !== rangeStart &&
+                   rangeStart !== ENV.END_OF_SET) {
           ranges[hintLocation] = rangeStart;
         }
 
