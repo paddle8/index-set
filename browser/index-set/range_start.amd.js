@@ -41,11 +41,11 @@ define(
       // recurse to find the starting index of this range
       if (typeof next === "undefined") {
         if (typeof rangeStart !== "undefined") {
-          next = rangeStartForIndex(indexSet, rangeStart);
+          rangeStart = rangeStartForIndex(indexSet, rangeStart);
         } else {
           rangeStart = 0;
-          next = Math.abs(ranges[rangeStart]);
         }
+        next = Math.abs(ranges[rangeStart]);
 
       // We don't care whether we're in a hole or not
       } else {

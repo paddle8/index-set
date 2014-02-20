@@ -27,19 +27,25 @@ test("index past last index", function () {
   equal(set.rangeStartForIndex(start + len + 20), start + len);
 });
 
-test("invalid index sets don't infinitely recurse", function () {
+test("index sets don't infinitely recurse", function () {
   var set = new IndexSet();
 
-  set.__ranges__ = new Array(155);
-  set.__ranges__[0]   = 0;
-  set.__ranges__[154] = 0;
-  set.firstIndex = -1;
-  set.lastIndex  = 153;
+  set.__ranges__ = new Array(542);
+  set.__ranges__[0]   =   50;
+  set.__ranges__[50]  = -516;
+  set.__ranges__[256] =   25;
+  set.__ranges__[512] =   25;
+  set.__ranges__[516] =  541;
+  set.__ranges__[541] =    0;
 
-  equal(set.indexBefore(178), -1);
-  equal(set.lastIndex, -1);
-  equal(set.firstIndex, -1);
-  equal(set.length, 0);
+  set.firstIndex =   0;
+  set.lastIndex  = 540;
+  set.length     =  75;
+
+  equal(set.rangeStartForIndex(540), 516);
+  equal(set.lastIndex, 540);
+  equal(set.firstIndex, 0);
+  equal(set.length, 75);
 });
 
 test("creating holes by appending to an existing range should not affect the range start", function () {
