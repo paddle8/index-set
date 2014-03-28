@@ -1,12 +1,12 @@
 var set,
-    event = function (hostObject, event) {
-      arguments.callee.args = Array.prototype.slice.call(arguments);
-      arguments.callee.scope = this;
-      arguments.callee.called++;
+    event = function (hostObject, _event) {
+      event.args = Array.prototype.slice.call(arguments);
+      event.scope = this;
+      event.called++;
 
-      var key = event.split(':')[0];
-      arguments.callee.state = {};
-      arguments.callee.state[key] = hostObject[key];
+      var key = _event.split(':')[0];
+      event.state = {};
+      event.state[key] = hostObject[key];
     };
 
 event.reset = function () {
