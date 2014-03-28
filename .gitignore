@@ -9,3 +9,4 @@
 .rvmrc
 node_modules
 tmp
+build
