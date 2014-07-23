@@ -6,6 +6,7 @@ var uglifyJavaScript = require('broccoli-uglify-js'),
     env = process.env.BROCCOLI_ENV || 'development';
 
 var publicFiles = 'public';
+var vendor = 'vendor';
 
 var lib = 'lib';
 lib = pickFiles(lib, {
@@ -13,7 +14,6 @@ lib = pickFiles(lib, {
   destDir: ''
 });
 
-var vendor = 'vendor';
 var libAndVendorTree = mergeTrees([lib, vendor]);
 
 var libJs = compileES6(libAndVendorTree, {
@@ -25,20 +25,33 @@ var libJs = compileES6(libAndVendorTree, {
   wrapInEval: false
 });
 
+var amdJs = compileES6(lib, {
+  inputFiles: [
+    '**/*.js'
+  ],
+  outputFile: '/index-set.amd.js',
+  wrapInEval: false
+});
+
+
 var tests = 'tests';
 tests = pickFiles(tests, {
   srcDir: '/',
   destDir: 'tests'
 });
 
-var testsJs = mergeTrees([lib, vendor, tests]);
+var testsJs = mergeTrees([lib, tests]);
 testsJs = compileES6(testsJs, {
-  loaderFile: 'loader.js',
   inputFiles: [
     '**/*.js'
   ],
   outputFile: '/index-set.js'
 });
+
+var minifiedAmdJs = uglifyJavaScript(moveFile(amdJs, {
+  srcFile: 'index-set.amd.js',
+  destFile: 'index-set.amd.min.js'
+}));
 
 var minifiedJs = uglifyJavaScript(moveFile(libJs, {
   srcFile: 'index-set.js',
@@ -49,4 +62,4 @@ if (env === 'test') {
   libJs = testsJs;
 }
 
-module.exports = mergeTrees([publicFiles, libJs, minifiedJs]);
+module.exports = mergeTrees([publicFiles, libJs, amdJs, minifiedJs, minifiedAmdJs]);
