@@ -16,6 +16,15 @@ var define, requireModule, require, requirejs;
 
   var uuid = 0;
 
+  function tryFinally(tryable, finalizer) {
+    try {
+      return tryable();
+    } finally {
+      finalizer();
+    }
+  }
+
+
   function Module(name, deps, callback, exports) {
     var defaultDeps = ['require', 'exports', 'module'];
 
@@ -52,7 +61,9 @@ var define, requireModule, require, requirejs;
       if (dep === 'exports') {
         module.exports = reified[i] = seen;
       } else if (dep === 'require') {
-        reified[i] = require;
+        reified[i] = function requireDep(dep) {
+          return require(resolve(dep, name));
+        };
       } else if (dep === 'module') {
         mod.exports = seen;
         module = reified[i] = mod;
@@ -84,21 +95,28 @@ var define, requireModule, require, requirejs;
 
     seen[name] = { }; // placeholder for run-time cycles
 
-    try {
+    tryFinally(function() {
       reified = reify(mod, name, seen[name]);
       module = mod.callback.apply(this, reified.deps);
       loaded = true;
-    } finally {
+    }, function() {
       if (!loaded) {
         mod.state = FAILED;
       }
+    });
+
+    var obj;
+    if (module === undefined && reified.module.exports) {
+      obj = reified.module.exports;
+    } else {
+      obj = seen[name] = module;
     }
 
-    if (module === undefined && reified.module.exports) {
-      return (seen[name] = reified.module.exports);
-    } else {
-      return (seen[name] = module);
+    if (obj !== null && typeof obj === 'object' && obj['default'] === undefined) {
+      obj['default'] = obj;
     }
+
+    return (seen[name] = obj);
   };
 
   function resolve(child, name) {

@@ -1,4 +1,5 @@
 /*global module test equal */
+import IndexSet from "index-set";
 
 var set;
 module("IndexSet#lastIndex", {

@@ -1,0 +1,24 @@
+{
+  "name": "index-set",
+  "dependencies": {
+    "loader.js": "stefanpenner/loader.js#2.0.0"
+  },
+  "version": "0.1.0",
+  "homepage": "https://github.com/paddle8/index-set",
+  "authors": [
+    "Tim Evans <tim.evans@paddle8.com>"
+  ],
+  "description": "JavaScript version of NSIndexSet",
+  "main": "dist/index-set.amd.js",
+  "keywords": [
+    "index-set",
+    "cocoa"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "tests"
+  ]
+}

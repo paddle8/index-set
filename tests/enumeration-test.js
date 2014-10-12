@@ -1,3 +1,5 @@
+import IndexSet from "index-set";
+
 var set;
 
 module("IndexSet#forEach", {

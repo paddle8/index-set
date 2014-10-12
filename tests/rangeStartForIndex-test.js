@@ -1,3 +1,5 @@
+import IndexSet from "index-set";
+
 var set, start, len;
 module("IndexSet#rangeStartForIndex", {
   setup: function () {

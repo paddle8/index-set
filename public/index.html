@@ -12,20 +12,13 @@
   <script src="qunit.js"></script>
   <script src="/testem.js"></script>
   <script>
-    IndexSet = require('index-set').default;
-    require('tests/index-set/add');
-    require('tests/index-set/coding');
-    require('tests/index-set/contains');
-    require('tests/index-set/copying');
-    require('tests/index-set/enumeration');
-    require('tests/index-set/first-index');
-    require('tests/index-set/index-after');
-    require('tests/index-set/index-before');
-    require('tests/index-set/intersects');
-    require('tests/index-set/observing');
-    require('tests/index-set/rangeStartForIndex');
-    require('tests/index-set/remove');
+    var modules = requirejs._eak_seen;
+    for (var moduleName in modules) {
+      if (modules.hasOwnProperty(moduleName) &&
+          moduleName.indexOf('-test') !== -1) {
+        require(moduleName);
+      }
+    }
   </script>
-
 </body>
 </html>

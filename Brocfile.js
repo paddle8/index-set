@@ -1,65 +1,56 @@
-var uglifyJavaScript = require('broccoli-uglify-js'),
-    pickFiles = require('broccoli-static-compiler'),
-    mergeTrees = require('broccoli-merge-trees'),
-    moveFile = require('broccoli-file-mover'),
-    compileES6 = require('broccoli-es6-concatenator'),
-    env = process.env.BROCCOLI_ENV || 'development';
+var compileES6 = require('broccoli-es6-concatenator');
+var mergeTrees = require('broccoli-merge-trees');
+var uglifyJs = require('broccoli-uglify-js');
+var moveFile = require('broccoli-file-mover');
+var env = process.env.BROCCOLI_ENV || 'development';
 
-var publicFiles = 'public';
-var vendor = 'vendor';
-
-var lib = 'lib';
-lib = pickFiles(lib, {
-  srcDir: '/',
-  destDir: ''
-});
-
-var libAndVendorTree = mergeTrees([lib, vendor]);
-
-var libJs = compileES6(libAndVendorTree, {
+var lib = compileES6(mergeTrees(['lib', 'bower_components/loader.js']), {
   loaderFile: 'loader.js',
   inputFiles: [
     '**/*.js'
   ],
-  outputFile: '/index-set.js',
-  wrapInEval: false
-});
-
-var amdJs = compileES6(lib, {
-  inputFiles: [
-    '**/*.js'
-  ],
-  outputFile: '/index-set.amd.js',
-  wrapInEval: false
-});
-
-
-var tests = 'tests';
-tests = pickFiles(tests, {
-  srcDir: '/',
-  destDir: 'tests'
-});
-
-var testsJs = mergeTrees([lib, tests]);
-testsJs = compileES6(testsJs, {
-  inputFiles: [
-    '**/*.js'
-  ],
+  wrapInEval: false,
   outputFile: '/index-set.js'
 });
 
-var minifiedAmdJs = uglifyJavaScript(moveFile(amdJs, {
-  srcFile: 'index-set.amd.js',
-  destFile: 'index-set.amd.min.js'
-}));
+var libAndTests = compileES6(mergeTrees(['lib', 'bower_components/loader.js', 'tests']), {
+  loaderFile: 'loader.js',
+  inputFiles: [
+    '**/*.js'
+  ],
+  wrapInEval: false,
+  outputFile: '/index-set.js'
+});
 
-var minifiedJs = uglifyJavaScript(moveFile(libJs, {
-  srcFile: 'index-set.js',
-  destFile: 'index-set.min.js'
-}));
+var amd = compileES6('lib', {
+  inputFiles: [
+    '**/*.js'
+  ],
+  wrapInEval: false,
+  outputFile: '/index-set.amd.js'
+});
+
+
+var uglify = function (tree, filename) {
+  var minFilename = filename.split('.');
+  minFilename.pop();
+  minFilename.push('min', 'js');
+  return uglifyJs(moveFile(tree, {
+    srcFile: '/' + filename,
+    destFile: '/' + minFilename.join('.')
+  }));
+};
 
 if (env === 'test') {
-  libJs = testsJs;
+  module.exports = mergeTrees([
+    'public',
+    libAndTests
+  ]);
+} else {
+  module.exports = mergeTrees([
+    lib,
+    uglify(lib, 'index-set.js'),
+    amd,
+    uglify(amd, 'index-set.amd.js')
+  ]);
 }
-
-module.exports = mergeTrees([publicFiles, libJs, amdJs, minifiedJs, minifiedAmdJs]);

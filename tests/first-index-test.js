@@ -1,3 +1,5 @@
+import IndexSet from "index-set";
+
 module("IndexSet#firstIndex");
 
 test("newly created index", function() {

@@ -1,4 +1,5 @@
 /*global module test equal context ok same notest */
+import IndexSet from "index-set";
 
 var set;
 
