@@ -8,5 +8,6 @@
 .rbenv-version
 .rvmrc
 node_modules
+bower_components
 tmp
 build
