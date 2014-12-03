@@ -1,3 +1,4 @@
+/* jshint node: true */
 var compileES6 = require('broccoli-es6-concatenator');
 var mergeTrees = require('broccoli-merge-trees');
 var uglifyJs = require('broccoli-uglify-js');

@@ -1,32 +1,32 @@
 import IndexSet from "index-set";
 
-var set, start, len;
+var set, startIdx, len;
 module("IndexSet#rangeStartForIndex", {
   setup: function () {
-    start = IndexSet.ENV.HINT_SIZE * 2 + 10;
+    startIdx = IndexSet.ENV.HINT_SIZE * 2 + 10;
     len  = Math.floor(IndexSet.ENV.HINT_SIZE * 1.5);
     set = new IndexSet();
-    set.addIndexesInRange(start, len);
+    set.addIndexesInRange(startIdx, len);
   }
 });
 
 test("index is start of range", function () {
-  equal(set.rangeStartForIndex(start), start);
+  equal(set.rangeStartForIndex(startIdx), startIdx);
   equal(set.rangeStartForIndex(0), 0);
 });
 
 test("index is middle of range", function () {
-  equal(set.rangeStartForIndex(start + 20), start);
-  equal(set.rangeStartForIndex(start + IndexSet.ENV.HINT_SIZE), start);
+  equal(set.rangeStartForIndex(startIdx + 20), startIdx);
+  equal(set.rangeStartForIndex(startIdx + IndexSet.ENV.HINT_SIZE), startIdx);
   equal(set.rangeStartForIndex(20), 0);
 });
 
 test("index last index", function () {
-  equal(set.rangeStartForIndex(start + len), start + len);
+  equal(set.rangeStartForIndex(startIdx + len), startIdx + len);
 });
 
 test("index past last index", function () {
-  equal(set.rangeStartForIndex(start + len + 20), start + len);
+  equal(set.rangeStartForIndex(startIdx + len + 20), startIdx + len);
 });
 
 test("index sets don't infinitely recurse", function () {
@@ -52,7 +52,7 @@ test("index sets don't infinitely recurse", function () {
 
 test("creating holes by appending to an existing range should not affect the range start", function () {
   var hintSize = IndexSet.ENV.HINT_SIZE,
-      start, set;
+      set;
 
   set = new IndexSet();
 
