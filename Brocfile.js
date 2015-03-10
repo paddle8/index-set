@@ -45,13 +45,13 @@ var tests = concat('tests', {
 });
 
 var amd = new ES6Module('lib', {
-  format: 'amd',
+  format: 'namedAmd',
   bundleOptions: {
     entry: 'index-set.js',
-    name: 'IndexSet'
+    name: 'index-set'
   }
 });
-amd = rename(amd, 'IndexSet.js', 'index-set.amd.js');
+amd = rename(amd, 'index-set.js', 'index-set.amd.js');
 
 var uglify = function (tree, filename) {
   var minFilename = filename.split('.');
