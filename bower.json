@@ -1,8 +1,5 @@
 {
   "name": "index-set",
-  "dependencies": {
-    "loader.js": "stefanpenner/loader.js#2.0.0"
-  },
   "version": "0.1.2",
   "homepage": "https://github.com/paddle8/index-set",
   "authors": [
@@ -21,5 +18,8 @@
     "bower_components",
     "tests",
     "public"
-  ]
+  ],
+  "devDependencies": {
+    "qunit": "~1.17.1"
+  }
 }

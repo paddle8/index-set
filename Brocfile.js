@@ -1,51 +1,71 @@
 /* jshint node: true */
-var compileES6 = require('broccoli-es6-concatenator');
+var ES6Module = require('broccoli-es6modules');
 var mergeTrees = require('broccoli-merge-trees');
 var uglifyJs = require('broccoli-uglify-js');
-var moveFile = require('broccoli-file-mover');
+var Funnel = require('broccoli-funnel');
+var concat = require('broccoli-concat');
 var env = process.env.BROCCOLI_ENV || 'development';
 
-var lib = compileES6(mergeTrees(['lib', 'bower_components/loader.js']), {
-  loaderFile: 'loader.js',
+var rename = function (tree, filename, name) {
+  return new Funnel(tree, {
+    destDir: '/',
+    getDestinationPath: function (relativePath) {
+      if (relativePath === filename) {
+        return name;
+      }
+
+      return relativePath;
+    }
+  });
+};
+
+var move = function (root, files, destination) {
+  return new Funnel(root, {
+    destDir: destination || '/',
+    include: files
+  });
+}
+
+var lib = new ES6Module('lib', {
+  format: 'umd',
+  bundleOptions: {
+    entry: 'index-set.js',
+    name: 'IndexSet'
+  }
+});
+lib = rename(lib, 'IndexSet.js', 'index-set.js');
+
+var tests = concat('tests', {
   inputFiles: [
-    '**/*.js'
+    '*-test.js'
   ],
-  wrapInEval: false,
-  outputFile: '/index-set.js'
+  outputFile: '/index-set-tests.js',
+  separator: '\n',
+  wrapInFunction: true
 });
 
-var libAndTests = compileES6(mergeTrees(['lib', 'bower_components/loader.js', 'tests']), {
-  loaderFile: 'loader.js',
-  inputFiles: [
-    '**/*.js'
-  ],
-  wrapInEval: false,
-  outputFile: '/index-set.js'
+var amd = new ES6Module('lib', {
+  format: 'amd',
+  bundleOptions: {
+    entry: 'index-set.js',
+    name: 'IndexSet'
+  }
 });
-
-var amd = compileES6('lib', {
-  inputFiles: [
-    '**/*.js'
-  ],
-  wrapInEval: false,
-  outputFile: '/index-set.amd.js'
-});
-
+amd = rename(amd, 'IndexSet.js', 'index-set.amd.js');
 
 var uglify = function (tree, filename) {
   var minFilename = filename.split('.');
   minFilename.pop();
   minFilename.push('min', 'js');
-  return uglifyJs(moveFile(tree, {
-    srcFile: '/' + filename,
-    destFile: '/' + minFilename.join('.')
-  }));
+  return uglifyJs(rename(tree, filename, minFilename.join('.')));
 };
 
 if (env === 'test') {
   module.exports = mergeTrees([
-    'public',
-    libAndTests
+    move('bower_components/qunit/qunit', ['qunit.css', 'qunit.js']),
+    move('tests', ['index.html']),
+    lib,
+    tests
   ]);
 } else {
   module.exports = mergeTrees([

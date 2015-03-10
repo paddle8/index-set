@@ -10,15 +10,7 @@
   <div id="qunit-fixture"></div>
   <script src="index-set.js"></script>
   <script src="qunit.js"></script>
-  <script src="/testem.js"></script>
-  <script>
-    var modules = requirejs._eak_seen;
-    for (var moduleName in modules) {
-      if (modules.hasOwnProperty(moduleName) &&
-          moduleName.indexOf('-test') !== -1) {
-        require(moduleName);
-      }
-    }
-  </script>
+  <script src="testem.js"></script>
+  <script src="index-set-tests.js"></script>
 </body>
 </html>

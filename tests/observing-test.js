@@ -1,5 +1,3 @@
-import IndexSet from "index-set";
-
 var set,
     event = function (hostObject, _event) {
       event.args = Array.prototype.slice.call(arguments);
