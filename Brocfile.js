@@ -49,6 +49,9 @@ var amd = new ES6Module('lib', {
   bundleOptions: {
     entry: 'index-set.js',
     name: 'index-set'
+  },
+  esperantoOptions: {
+    strict: true
   }
 });
 amd = rename(amd, 'index-set.js', 'index-set.amd.js');

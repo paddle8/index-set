@@ -1,4 +1,4 @@
-define('index-set', function () {
+define('index-set', ['exports'], function (exports) {
 
   'use strict';
 
@@ -1664,6 +1664,6 @@ define('index-set', function () {
 
   var index_set = IndexSet;
 
-  return index_set;
+  exports['default'] = index_set;
 
 });

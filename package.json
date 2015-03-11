@@ -8,6 +8,11 @@
     "type": "git",
     "url": "https://github.com/paddle8/index-set"
   },
+  "scripts": {
+    "start": "BROCCOLI_ENV=test broccoli server",
+    "build": "rm -rf dist; broccoli build dist",
+    "test": "rm -rf build; BROCCOLI_ENV=test broccoli build ./build; testem ci -l phantomjs"
+  },
   "devDependencies": {
     "broccoli": "^0.13.0",
     "broccoli-concat": "0.0.12",
