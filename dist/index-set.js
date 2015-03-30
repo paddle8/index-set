@@ -5,10 +5,6 @@
 }(this, function () { 'use strict';
 
   var ENV = {
-    // The size of the space where we mark hints
-    // to increase the performance of `rangeStartForIndex`.
-    HINT_SIZE: 256,
-
     // A constant indicating the end of the IndexSet
     END_OF_SET: 0
   };
@@ -17,8 +13,7 @@
     var ranges = indexSet.__ranges__,
         lastIndex = indexSet.lastIndex + 1,
         rangeStart,
-        next,
-        hint;
+        next;
 
     // If the index is the lastIndex or past it,
     // then the last index is the start of the range.
@@ -33,27 +28,13 @@
 
     // Lookup the hint index and see if we have
     // a hit where the start of the range is
-    hint = index - (index % ENV.HINT_SIZE);
-    rangeStart = ranges[hint];
-
-    // If the hint was negative, we hit a boundary;
-    // if the hint was greater than the index we requested,
-    // we need to backtrack from the hint index to
-    // find the start of the range.
-    if (rangeStart < 0 || rangeStart > index) {
-      rangeStart = hint;
-    }
-
+    rangeStart = index;
     next = ranges[rangeStart];
 
     // We are searching in the middle of a range;
     // recurse to find the starting index of this range
     if (typeof next === "undefined") {
-      if (typeof rangeStart !== "undefined") {
-        rangeStart = rangeStartForIndex(indexSet, rangeStart);
-      } else {
-        rangeStart = 0;
-      }
+      rangeStart = 0;
       next = Math.abs(ranges[rangeStart]);
 
     // We don't care whether we're in a hole or not
@@ -261,38 +242,6 @@
       next = ranges[cursor];
     }
     return true;
-  }
-
-  function addHintFor(indexSet, rangeStart, rangeLength) {
-    var ranges = indexSet.__ranges__,
-        skip   = ENV.HINT_SIZE,
-        next   = Math.abs(ranges[rangeStart]),
-        hintLocation = rangeStart - (rangeStart % skip) + skip,
-        limit  = rangeStart + rangeLength;
-
-    while (hintLocation < limit) {
-      // Ensure we are in the current range
-      while (next !== ENV.END_OF_SET && next <= hintLocation) {
-        rangeStart = next;
-        next = Math.abs(ranges[rangeStart]);
-      }
-
-      // We're past the end of the set
-      if (next === ENV.END_OF_SET) {
-        if (rangeStart === 0) {
-          indexSet.__ranges__ = [0];
-        } else if (ranges.hasOwnProperty(hintLocation)) {
-          delete ranges[hintLocation];
-        }
-
-      // Don't mark a hint if it's a range boundary
-      } else if (hintLocation !== rangeStart &&
-                 rangeStart !== ENV.END_OF_SET) {
-        ranges[hintLocation] = rangeStart;
-      }
-
-      hintLocation += skip;
-    }
   }
 
   var observing__toString = Object.prototype.toString,
@@ -641,8 +590,6 @@
         set(indexSet, 'firstIndex', Math.abs(cursor));
       }
     }
-
-    addHintFor(indexSet, rangeStart, rangeLength);
   }
 
   var removal__END_OF_SET = ENV.END_OF_SET;
@@ -783,8 +730,6 @@
 
     // Compute hint length
     rangeLength = rangeEnd - rangeStart;
-
-    addHintFor(indexSet, rangeStart, rangeLength);
 
     // The firstIndex of the set might've changed
     if (delta !== 0) {
@@ -1106,13 +1051,14 @@
       //
       // This results in a faster clone for
       // very large index sets.
-      this.__ranges__ = source.__ranges__.slice();
+      this.__ranges__ = IndexSet.createJumpList(source.__ranges__);
       this.length = source.length;
       this.firstIndex = source.firstIndex;
       this.lastIndex = source.lastIndex;
 
     } else {
-      this.__ranges__ = [index_set__END_OF_SET];
+      this.__ranges__ = IndexSet.createJumpList();
+      this.__ranges__[0] = index_set__END_OF_SET;
       invokeConcreteMethodFor(this, 'add', args);
     }
   }
@@ -1232,7 +1178,8 @@
       trigger(this, 'firstIndex:before', -1);
       trigger(this, 'lastIndex:before',  -1);
 
-      this.__ranges__ = [0];
+      this.__ranges__ = IndexSet.createJumpList();
+      this.__ranges__[0] = index_set__END_OF_SET;
       this.length     = 0;
       this.firstIndex = -1;
       this.lastIndex  = -1;
@@ -1661,6 +1608,32 @@
   IndexSet.deserialize = function (string, strict) {
     return deserialize(new IndexSet(), string, strict);
   };
+
+  /**
+    Override this method if you would like to bypass typed array
+    optimizations. The hard coded max size of and IndexSet is
+    8,388,607. If your data requires larger data sets, remove
+    the TypedArray creation.
+
+    @method createJumpList
+    @static
+    @param list {Array} The jump list to create a new one from
+    @return {Array} A new jump list
+   */
+  IndexSet.createJumpList = function (list) {
+    if (this['Int32Array']) {
+      if (list) {
+        return new Int32Array(list);
+      }
+      list = new Int32Array(0x7FFFFF);
+    } else {
+      if (list) {
+        return list.slice();
+      }
+      list = [];
+    }
+    return list;
+  }
 
   IndexSet.ENV = ENV;
 
