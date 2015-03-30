@@ -1,7 +1,7 @@
 {
   "name": "index-set",
   "description": "JavaScript version of NSIndexSet",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "author": "Tim Evans <tim.evans@paddle8.com>",
   "license": "MIT",
   "repository": {
